@@ -168,7 +168,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
     </form>
     <div class="tools">
       <button class="btn btn-ghost" id="hintBtn" type="button">Indice : 1 lettre par mot <span class="cost">15</span></button>
-      <button class="btn btn-ghost skip" id="skipBtn" type="button" hidden>Passer <span class="cost">30</span></button>
+      <button class="btn btn-ghost skip" id="skipBtn" type="button" hidden>Passer <span class="cost">60</span></button>
     </div>
   </div>
   <div id="doneUI" hidden>
@@ -529,7 +529,7 @@ const $=id=>document.getElementById(id);
 const KEY="quintette.v2",BANKV=4;
 const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ROMAN=["","","II","III","IV","V","VI","VII","VIII","IX","X"];
-function chapter(L){const i=Math.floor((L-1)/10),s=Scene.info(i),r=Math.floor(i/10)+1;return{idx:i,accent:s.accent,label:s.name+(r>1?" "+(ROMAN[r]||r):"")};}
+function chapter(L){const i=Math.floor(L/10),s=Scene.info(i),r=Math.floor(i/10)+1;return{idx:i,accent:s.accent,label:s.name+(r>1?" "+(ROMAN[r]||r):"")};}
 function applyChapter(){const c=chapter(S.level);document.documentElement.style.setProperty("--accent",c.accent);
   $("chap").textContent="Ch."+(c.idx+1)+" · "+c.label;Scene.set(c.idx,S.level);}
 
@@ -767,14 +767,14 @@ $("hintBtn").addEventListener("click",()=>{
   afterChange(ups);
 });
 $("skipBtn").addEventListener("click",()=>{
-  if(isDone()||S.coins<30)return;
-  S.coins-=30;S.cur.st=S.cur.st.map(s=>s||3);save();bumpCoins();
+  if(isDone()||S.coins<60)return;
+  S.coins-=60;S.cur.st=S.cur.st.map(s=>s||3);save();bumpCoins();
   S.cur.st.forEach((s,k)=>{if(s===3)paintSlot(k,true);});setDoneUI();
 });
 function skipTick(){const b=$("skipBtn");if(!S.cur)return;
-  const show=!isDone()&&(Date.now()-(S.cur.t0||Date.now())>=90000||(S.cur.miss||0)>=15);
-  if(b.hidden===show)b.hidden=!show;b.disabled=S.coins<30;
-  b.title=S.coins<30?"Il te faut 30 pièces":"";}
+  const show=!isDone()&&(Date.now()-(S.cur.t0||Date.now())>=15000||(S.cur.miss||0)>=15);
+  if(b.hidden===show)b.hidden=!show;b.disabled=S.coins<60;
+  b.title=S.coins<60?"Il te faut 60 pièces":"";}
 setInterval(skipTick,1000);
 $("nextBtn").addEventListener("click",()=>{pickQ();renderQ();
   if(window.matchMedia&&matchMedia("(pointer:fine)").matches)$("answer").focus();});
