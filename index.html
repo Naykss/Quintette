@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style></head><body>
+<title>Quintette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Plateau en verre posé sur un paysage animé (canvas). Colonne large sur PC, compacte sur mobile :
+   HUD → carte (question, zone d'atterrissage, 5 mots en pendu) → saisie → clavier AZERTY. */
+:root{
+  --glass:rgba(8,12,26,.44); --glass2:rgba(255,255,255,.08); --line:rgba(255,255,255,.16);
+  --ink:#f7f4ec; --dim:rgba(247,244,236,.66);
+  --accent:#ffd23f; --accent-ink:#17120a;
+  --ok:#43dd86; --ok-ink:#05230f; --bad:#ff5a5f; --warn:#ffad3b; --warn-ink:#2a1700;
+  --f-disp:"Bungee","Arial Black",Impact,sans-serif;
+  --f-body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-cond:"Barlow Condensed","Arial Narrow","Segoe UI",sans-serif;
+  --cell:min(54px,calc((100vw - 120px) / var(--n,12)));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:#0b1426;color:var(--ink);font-family:var(--f-body);font-size:16px}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 24px;display:flex;flex-direction:column;gap:12px}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:16px;-webkit-backdrop-filter:blur(5px) saturate(1.15);backdrop-filter:blur(5px) saturate(1.15);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:14px;padding:10px}
+.coins{flex:none;width:76px;height:76px;border:3px solid var(--accent);border-radius:12px;background:rgba(0,0,0,.35);box-shadow:4px 4px 0 var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.coins b{font:400 24px/1 var(--f-disp);color:var(--accent);font-variant-numeric:tabular-nums}
+.coins b.s{font-size:18px}.coins b.xs{font-size:13px}
+.coins small{font:700 10px/1 var(--f-cond);letter-spacing:.16em;color:var(--dim)}
+.coins.bump{animation:bump .45s ease}
+@keyframes bump{40%{transform:scale(1.15) rotate(-3deg)}}
+.lvl{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.lvl-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.lvl-num{font:400 24px/1 var(--f-disp);white-space:nowrap}
+.chap{font:700 13px/1 var(--f-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:14px;border-radius:4px;background:rgba(255,255,255,.1);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(-45deg,var(--accent) 0 8px,color-mix(in srgb,var(--accent) 78%,#fff) 8px 16px);transition:width .5s ease}
+.lvl-sub{font:600 14px/1 var(--f-cond);color:var(--dim);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.save-btn{flex:none;width:76px;height:76px;border-radius:12px;border:2px solid var(--line);background:var(--glass2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:700 11px/1 var(--f-cond);letter-spacing:.12em;color:var(--dim)}
+.save-btn svg{width:24px;height:24px;stroke:var(--ink)}
+.save-btn:hover{border-color:var(--accent)}
+
+/* Carte question + mots */
+.board{padding:20px 22px 22px}
+.qmeta{display:flex;align-items:center;gap:10px;font:700 13px/1 var(--f-cond);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.cat{background:var(--accent);color:var(--accent-ink);padding:5px 9px 4px;border-radius:4px}
+.diff{display:flex;gap:3px}
+.diff i{width:9px;height:9px;border-radius:2px;background:rgba(255,255,255,.12);border:1px solid var(--line)}
+.diff i.on{background:var(--ink);border-color:var(--ink)}
+.qtext{margin:12px 0 0;font-weight:800;font-size:clamp(21px,4.4vw,36px);line-height:1.12;text-wrap:balance;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.stage{height:64px;margin:10px 0 6px;border-radius:12px;border:2px dashed rgba(255,255,255,.14);display:grid;place-items:center;font:600 14px var(--f-cond);letter-spacing:.06em;color:var(--dim)}
+.slots{display:flex;flex-direction:column;gap:clamp(10px,1.8vw,16px);margin-top:22px}
+.slot{display:flex;align-items:flex-end;gap:10px}
+.slot-n{flex:none;width:22px;font:400 16px/1 var(--f-disp);color:var(--dim);text-align:center;padding-bottom:6px}
+.tiles{flex:1;min-width:0;display:grid;grid-template-columns:repeat(var(--n),var(--cell));gap:clamp(3px,.8vw,7px)}
+.t{height:calc(var(--cell) * 1.15);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font:400 calc(var(--cell) * .62)/1 var(--f-disp);border-bottom:4px solid var(--ink);color:var(--ink)}
+.t.off{border-bottom-color:rgba(255,255,255,.14);border-bottom-width:3px}
+.t.gap{border-bottom-color:transparent}
+.t.hint{color:var(--accent)}
+.slot.found .t.on{color:var(--ok);border-bottom-color:var(--ok)}
+.slot.hinted .t.on{color:var(--warn);border-bottom-color:var(--warn)}
+.slot.missed .t.on{color:rgba(255,255,255,.5);border-bottom-color:rgba(255,255,255,.35)}
+.t.flip{animation:drop .4s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes drop{from{transform:translateY(-14px) scale(1.3);opacity:0}to{transform:none;opacity:1}}
+.slot.ping .tiles{animation:ping .5s}
+@keyframes ping{40%{transform:scale(1.03)}}
+
+/* Saisie + outils */
+.inrow{display:flex;gap:10px}
+#answer{flex:1;min-width:0;font:800 22px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:14px 16px;border-radius:12px;border:2px solid var(--line);background:var(--glass);color:var(--ink);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+#answer::placeholder{color:var(--dim);font-weight:600;text-transform:none;letter-spacing:0}
+#answer:focus{outline:none;border-color:var(--accent)}
+#answer.buzz{animation:buzz .32s;border-color:var(--bad)}
+@keyframes buzz{15%,55%{transform:translateX(-7px)}35%,75%{transform:translateX(7px)}}
+.btn{border:0;border-radius:12px;padding:14px 20px;font:800 17px/1 var(--f-body)}
+.btn-go{background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.btn-go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.tools{display:flex;gap:10px}
+.btn-ghost{flex:1;background:var(--glass);border:2px solid var(--line);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.btn-ghost:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.cost{font:400 14px/1 var(--f-disp);background:var(--accent);color:var(--accent-ink);padding:5px 7px 4px;border-radius:5px}
+.skip{flex:0 0 auto;animation:appear .35s ease both}
+@keyframes appear{from{transform:scale(.7);opacity:0}}
+.next{width:100%;font-size:20px;padding:18px}
+.done-line{text-align:center;font:700 15px var(--f-cond);letter-spacing:.06em;color:var(--ink);margin-bottom:10px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+
+/* Clavier */
+.kbd{padding:10px;display:flex;flex-direction:column;gap:7px}
+.krow{display:flex;gap:6px;justify-content:center}
+.key{flex:1;max-width:66px;height:clamp(42px,6.2vw,56px);border-radius:8px;border:0;background:rgba(255,255,255,.16);color:var(--ink);font:400 clamp(14px,2.4vw,20px)/1 var(--f-disp);box-shadow:0 3px 0 rgba(0,0,0,.35);transition:background .25s,opacity .25s}
+.key:hover{background:rgba(255,255,255,.26)}
+.key:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.key.live{background:color-mix(in srgb,var(--accent) 30%,rgba(255,255,255,.12))}
+.key.dead,.key:disabled{opacity:.25;background:rgba(255,255,255,.06);cursor:not-allowed;box-shadow:none;transform:none}
+.key.wide{flex:2.2;max-width:180px;font:800 15px/1 var(--f-body);letter-spacing:.06em}
+.key.go{background:var(--accent);color:var(--accent-ink)}
+.kbd-legend{display:flex;gap:16px;justify-content:center;font:600 13px var(--f-cond);color:var(--dim);letter-spacing:.04em}
+.kbd-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* Animations */
+.fly{position:fixed;left:0;top:0;z-index:50;pointer-events:none;white-space:nowrap;font:800 clamp(20px,3vw,28px)/1 var(--f-body);letter-spacing:.04em;text-transform:uppercase;padding:12px 18px;border-radius:12px;background:var(--ink);color:#141820;box-shadow:0 8px 0 rgba(0,0,0,.3)}
+.fly.ok{background:var(--ok);color:var(--ok-ink)}
+.fly.bad{background:var(--bad);color:#fff}
+.fly.warn{background:var(--warn);color:var(--warn-ink)}
+.fly.dup{background:#2a3350;color:var(--ink)}
+.fly .v{font-family:var(--f-disp);font-weight:400;margin-right:10px}
+.fly small{display:block;margin-top:6px;font:700 13px/1 var(--f-cond);letter-spacing:.06em;text-transform:none}
+.puff{position:fixed;left:0;top:0;z-index:49;width:16px;height:16px;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.85)}
+.plus{position:fixed;left:0;top:0;z-index:60;pointer-events:none;font:400 24px/1 var(--f-disp);color:var(--accent);text-shadow:2px 2px 0 rgba(0,0,0,.5)}
+.banner{position:fixed;inset:0;z-index:80;display:grid;place-items:center;pointer-events:none;text-align:center;padding:16px}
+.banner div{animation:pop 2.4s cubic-bezier(.2,.9,.3,1.1) both}
+.banner b{display:block;font:400 clamp(44px,11vw,96px)/1 var(--f-disp);color:var(--accent);text-shadow:5px 5px 0 rgba(0,0,0,.45)}
+.banner span{display:block;margin-top:12px;font:800 clamp(17px,3vw,26px)/1.2 var(--f-body);text-shadow:0 2px 10px rgba(0,0,0,.7)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.08);opacity:1}25%{transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:70;background:#1b2238;border:1px solid var(--line);padding:10px 16px;border-radius:10px;font:700 15px var(--f-body);max-width:calc(100% - 32px);text-align:center}
+
+/* Fenêtre sauvegarde */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.sheet{width:min(520px,100%);max-height:calc(100% - 16px);overflow:auto;background:#141a2e;border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px}
+.sheet h2{margin:0;font:400 22px/1 var(--f-disp);color:var(--accent)}
+.sheet h3{margin:8px 0 0;font:700 13px/1 var(--f-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.sheet p{margin:0;line-height:1.45;color:var(--dim);font-size:15px}
+.code{font:400 clamp(28px,8vw,40px)/1 var(--f-disp);letter-spacing:.08em;text-align:center;padding:16px;border-radius:12px;background:rgba(0,0,0,.35);border:2px dashed var(--accent);color:var(--accent);user-select:all;-webkit-user-select:all}
+.where{font:700 15px var(--f-cond);letter-spacing:.06em;text-align:center}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .btn{flex:1}
+#mInput{width:100%;font:400 24px/1 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:14px;border-radius:12px;border:2px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink)}
+.msg{font:700 14px var(--f-body);min-height:1em}
+.msg.err{color:var(--bad)}.msg.okc{color:var(--ok)}
+.x{align-self:flex-end;background:none;border:0;color:var(--dim);font:700 14px var(--f-body);padding:4px}
+.danger{background:transparent;border:2px solid color-mix(in srgb,var(--bad) 60%,transparent)}
+@media (max-width:560px){.coins,.save-btn{width:62px;height:62px}.coins b{font-size:19px}.lvl-num{font-size:18px}.board{padding:16px 14px 18px}.krow{gap:4px}.kbd{padding:8px 6px}.tiles{gap:3px}:root{--cell:min(54px,calc((100vw - 90px) / var(--n,12)))}.t{border-bottom-width:3px;padding-bottom:4px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="app">
+  <header class="hud glass">
+    <div class="coins" id="coins" aria-label="Pièces"><b id="coinNum">50</b><small>PIÈCES</small></div>
+    <div class="lvl">
+      <div class="lvl-top"><span class="lvl-num" id="lvlNum">NIV. 1</span><span class="chap" id="chap"></span></div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="lvl-sub" id="lvlSub"></div>
+    </div>
+    <button class="save-btn" id="saveBtn" aria-label="Exporter ou importer"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5-5 5 5"/><path d="M12 5v10"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>CODE</button>
+  </header>
+
+  <section class="board glass">
+    <div class="qmeta"><span class="cat" id="qcat"></span><span class="diff" id="qdiff"></span></div>
+    <h1 class="qtext" id="qtext">Chargement…</h1>
+    <div class="slots" id="slots" aria-label="Les 5 réponses"></div>
+  </section>
+
+  <div id="playUI" style="display:flex;flex-direction:column;gap:10px">
+    <form class="inrow" id="form" autocomplete="off">
+      <input id="answer" type="text" placeholder="Tape ta réponse…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Ta réponse">
+      <button class="btn btn-go" type="submit">OK</button>
+    </form>
+    <div class="tools">
+      <button class="btn btn-ghost" id="hintBtn" type="button">Indice : 1 lettre par mot <span class="cost">15</span></button>
+      <button class="btn btn-ghost skip" id="skipBtn" type="button" hidden>Passer <span class="cost">30</span></button>
+    </div>
+  </div>
+  <div id="doneUI" hidden>
+    <div class="done-line" id="doneLine"></div>
+    <button class="btn btn-go next" id="nextBtn" type="button">Question suivante →</button>
+  </div>
+
+  <div class="kbd glass" id="kbd" aria-label="Clavier"></div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="x" id="mClose" type="button">Fermer ✕</button>
+    <h2 id="mTitle">Exporter</h2>
+    <p>Trois blocs de lettres : ton niveau, ta phase et tes pièces. Ils sont liés entre eux, donc si tu changes une seule lettre, le code ne marche plus.</p>
+    <div class="code" id="mCode"></div>
+    <div class="where" id="mWhere"></div>
+    <div class="row"><button class="btn btn-go" id="mCopy" type="button">Copier le code</button></div>
+    <h3>Importer</h3>
+    <input id="mInput" type="text" maxlength="14" placeholder="ABC-DE-FGHI" autocomplete="off" spellcheck="false" aria-label="Code à importer">
+    <div class="msg" id="mMsg"></div>
+    <div class="row"><button class="btn btn-ghost" id="mLoad" type="button">Vérifier le code</button></div>
+    <div class="row" id="mConfirmRow" hidden><button class="btn btn-go" id="mConfirm" type="button">Charger cette partie</button></div>
+    <h3>Nouvelle partie</h3>
+    <div class="row"><button class="btn danger" id="mReset" type="button">Tout recommencer au niveau 1</button></div>
+    <div class="row" id="mResetRow" hidden><button class="btn danger" id="mResetYes" type="button" style="border-color:var(--bad)">Oui, tout effacer</button></div>
+    <p style="font-size:13px">La partie est aussi enregistrée toute seule dans ce navigateur.</p>
+  </div>
+</div>
+<script>
+/* ---------- règles + texte ---------- */
+const need = L => L<=30?10 : L<=60?20 : L<=90?30 : L<=120?40 : 50;
+const ROM=["","i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii","xiii","xiv","xv","xvi","xvii","xviii","xix","xx"];
+const STOP=new Set(["le","la","les","l","un","une","des","du","de","d"]);
+function deacc(s){return String(s).toLowerCase().replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[̀-ͯ]/g,"");}
+function norm(s){
+  const t=deacc(s).split(/[^a-z0-9]+/).filter(Boolean)
+    .map(w=>/^1ere?$/.test(w)?"ier":(/^\d+$/.test(w)&&+w>0&&+w<=20?ROM[+w]:w));
+  while(t.length>1&&STOP.has(t[0]))t.shift();
+  return t.join("");
+}
+const stem=s=>s.length>3?s.replace(/[sx]$/,""):s;
+const same=(a,b)=>a===b||stem(a)===stem(b);
+function lev(a,b){
+  const m=a.length,n=b.length;let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}
+  return p[n];
+}
+function near(a,b){
+  const L=Math.max(a.length,b.length);if(L<5)return false;
+  const lim=L>=9?2:1;if(Math.abs(a.length-b.length)>lim)return false;
+  return lev(a,b)<=lim;
+}
+
+/* ---------- code de sauvegarde : NIVEAU-PHASE-PIÈCES en lettres (ABC-DE-FGHI) ---------- */
+const CODEC=(()=>{
+  const AL="QWHTKZMBXRDPLFVJNGSACYEUIO";
+  const G=[{m:17576,a:7919,b:4211,n:3},{m:676,a:461,b:333,n:2},{m:456976,a:104729,b:271828,n:4}];
+  const inv=(a,m)=>{let[t,nt,r,nr]=[0,1,m,a%m];while(nr){const q=Math.floor(r/nr);[t,nt]=[nt,t-q*nt];[r,nr]=[nr,r-q*nr];}return(t%m+m)%m;};
+  G.forEach(g=>g.ia=inv(g.a,g.m));
+  const hash=(L,P,C)=>{let h=Math.imul(L*2654435761^P*40503^C*2246822519,0x27d4eb2d);h^=h>>>15;h=Math.imul(h,0x165667b1);h^=h>>>13;return(h>>>20)&1023;};
+  const mulmod=(x,a,m)=>Number(BigInt(x)*BigInt(a)%BigInt(m));
+  function enc(v,g){let x=(mulmod(v,g.a,g.m)+g.b)%g.m,s="";for(let i=0;i<g.n;i++){s=AL[x%26]+s;x=Math.floor(x/26);}return s;}
+  function dec(s,g){if(s.length!==g.n)return-1;let x=0;for(const ch of s){const k=AL.indexOf(ch);if(k<0)return-1;x=x*26+k;}return mulmod((x-g.b+g.m)%g.m,g.ia,g.m);}
+  function encode(level,phase,coins){
+    const L=Math.min(Math.max(level|0,1),2048)-1,P=Math.min(Math.max(phase|0,0),63),C=Math.min(Math.max(Math.round(coins/5),0),16383),H=hash(L,P,C);
+    return[enc(L*8+(H&7),G[0]),enc(P*8+((H>>3)&7),G[1]),enc(C*16+(H>>6),G[2])].join("-");
+  }
+  function decode(str){
+    const parts=String(str).toUpperCase().replace(/[^A-Z]+/g," ").trim().split(" ");
+    if(parts.length!==3)return null;
+    const v=parts.map((p,i)=>dec(p,G[i]));if(v.some(x=>x<0))return null;
+    if(v[0]>=16384||v[1]>=512||v[2]>=262144)return null;
+    const L=v[0]>>3,P=v[1]>>3,C=v[2]>>4,H=hash(L,P,C);
+    if((v[0]&7)!==(H&7)||(v[1]&7)!==((H>>3)&7)||(v[2]&15)!==(H>>6))return null;
+    const level=L+1;if(P>=need(level))return null;
+    return{level,phase:P,coins:C*5};
+  }
+  return{encode,decode};
+})();
+const QB=[
+"1|Géo|Les 5 Grands Lacs d'Amérique du Nord|Supérieur/Lac Superieur;Michigan/Lac Michigan;Huron/Lac Huron;Érié/Lac Erie;Ontario/Lac Ontario",
+"1|Géo|Les 5 plus grands pays du monde par la superficie|Russie;Canada;Chine;États-Unis/USA/Etats Unis/Amerique;Brésil",
+"2|Géo|Les 5 pays les plus peuplés du monde (2025)|Inde;Chine;États-Unis/USA/Etats Unis/Amerique;Indonésie;Pakistan",
+"3|Géo|Les 5 plus longs fleuves du monde|Nil;Amazone;Yangtsé/Yangtze/Yang Tse/Chang Jiang/Fleuve bleu;Mississippi/Missouri/Mississippi-Missouri;Ienisseï/Ienissei/Yenisei",
+"1|Géo|Les 5 grands fleuves de France appris à l'école|Seine;Loire;Garonne;Rhône;Rhin",
+"1|Géo|Les 5 départements des Hauts-de-France|Nord;Pas-de-Calais;Somme;Oise;Aisne",
+"2|Géo|Les 5 départements de Normandie|Calvados;Eure;Manche;Orne;Seine-Maritime",
+"2|Géo|Les 5 départements d'outre-mer|Guadeloupe;Martinique;Guyane;Réunion/La Reunion;Mayotte",
+"2|Géo|Les 5 pays d'Asie centrale en « -stan » (ex-URSS)|Kazakhstan;Ouzbékistan;Turkménistan;Kirghizistan;Tadjikistan",
+"1|Géo|Les 5 pays nordiques|Norvège;Suède;Danemark;Finlande;Islande",
+"2|Géo|Les capitales des 5 pays nordiques|Oslo;Stockholm;Copenhague;Helsinki;Reykjavik",
+"2|Géo|Les 5 arrondissements (boroughs) de New York|Manhattan;Brooklyn;Queens;Bronx/The Bronx;Staten Island",
+"3|Géo|Les 5 plus hauts sommets du monde|Everest;K2;Kangchenjunga/Kanchenjunga;Lhotse;Makalu",
+"2|Géo|Les 5 pays du Maghreb|Maroc;Algérie;Tunisie;Libye;Mauritanie",
+"3|Géo|Les capitales des 5 pays du Maghreb|Rabat;Alger;Tunis;Tripoli;Nouakchott",
+"1|Géo|Les 5 villes de France les plus peuplées|Paris;Marseille;Lyon;Toulouse;Nice",
+"3|Géo|Les 5 pays (ou territoires) qui ont une frontière terrestre avec l'Espagne|France;Portugal;Andorre;Maroc;Royaume-Uni/Gibraltar/UK/Angleterre",
+"2|Géo|Les 5 pays frontaliers de la Suisse|France;Allemagne;Italie;Autriche;Liechtenstein",
+"1|Géo|Les 5 océans|Pacifique;Atlantique;Indien;Arctique;Austral/Antarctique",
+"2|Géo|Les 5 plus grandes îles de la Méditerranée|Sicile;Sardaigne;Chypre;Corse;Crète",
+"3|Géo|Les 5 plus grandes îles du monde|Groenland;Nouvelle-Guinée;Bornéo;Madagascar;Baffin/Terre de Baffin/Ile de Baffin",
+"1|Géo|Les 5 grandes chaînes de montagnes de France métropolitaine|Alpes;Pyrénées;Massif central;Jura;Vosges|Corse;Ardennes",
+"3|Géo|Les 5 pays les plus peuplés d'Afrique|Nigeria;Éthiopie;Égypte;RDC/Congo/Republique democratique du Congo;Tanzanie",
+"2|Géo|Les 5 pays les plus peuplés de l'Union européenne|Allemagne;France;Italie;Espagne;Pologne",
+"3|Géo|Les 5 États américains les plus peuplés|Californie;Texas;Floride;New York;Pennsylvanie",
+"3|Géo|Les 5 plus grands États américains par la superficie|Alaska;Texas;Californie;Montana;Nouveau-Mexique",
+"3|Géo|Les 5 pays qui bordent la mer Caspienne|Russie;Kazakhstan;Turkménistan;Iran;Azerbaïdjan",
+"2|Géo|Les 5 pays fondateurs des BRICS|Brésil;Russie;Inde;Chine;Afrique du Sud",
+"3|Géo|Les 5 plus grands pays d'Amérique du Sud|Brésil;Argentine;Pérou;Colombie;Bolivie",
+"3|Géo|Les 5 plus grands déserts du monde|Antarctique;Arctique;Sahara;Arabie/Desert d'Arabie/Arabique;Gobi",
+"1|Géo|Les 5 membres permanents du Conseil de sécurité de l'ONU|États-Unis/USA/Etats Unis;Russie;Chine;France;Royaume-Uni/UK/Angleterre/Grande-Bretagne",
+"2|Géo|5 des 6 pays fondateurs de la Communauté européenne (1957)|France;Allemagne/RFA;Italie;Belgique;Pays-Bas/Hollande;Luxembourg",
+"1|Histoire|Les 5 premiers présidents de la Ve République|De Gaulle/Charles de Gaulle;Pompidou;Giscard/Giscard d'Estaing/VGE;Mitterrand;Chirac",
+"1|Histoire|Les 5 derniers présidents de la République avant 2027|Macron;Hollande;Sarkozy;Chirac;Mitterrand",
+"2|Histoire|Les 5 rois Bourbons avant la Révolution|Henri IV;Louis XIII;Louis XIV;Louis XV;Louis XVI",
+"2|Histoire|Les 5 plages du Débarquement en Normandie (noms de code)|Utah;Omaha;Gold;Juno;Sword",
+"3|Histoire|Les 5 premiers empereurs romains|Auguste/Octave;Tibère;Caligula;Claude;Néron",
+"3|Histoire|Les 5 « bons empereurs » romains|Nerva;Trajan;Hadrien;Antonin/Antonin le Pieux;Marc Aurèle",
+"1|Histoire|Les 5 couleurs des anneaux olympiques|Bleu;Jaune;Noir;Vert;Rouge",
+"1|Histoire|Les 5 continents représentés par les anneaux olympiques|Afrique;Amérique;Asie;Europe;Océanie",
+"2|Histoire|Les 5 dernières villes des JO d'été (jusqu'à 2024)|Paris;Tokyo;Rio/Rio de Janeiro;Londres;Pékin/Beijing",
+"3|Histoire|Les 5 premiers hommes à avoir marché sur la Lune|Armstrong/Neil Armstrong;Aldrin/Buzz Aldrin;Conrad/Pete Conrad;Bean/Alan Bean;Shepard/Alan Shepard",
+"2|Histoire|Les 5 premiers pays à avoir eu la bombe atomique|États-Unis/USA/Etats Unis;URSS/Russie/Union sovietique;Royaume-Uni/UK/Angleterre;France;Chine",
+"2|Histoire|Les 5 frères et sœurs de Zeus|Poséidon;Hadès;Héra;Déméter;Hestia",
+"3|Histoire|Les 5 fleuves des Enfers dans la mythologie grecque|Styx;Achéron;Léthé;Cocyte;Phlégéthon/Pyriphlegeton",
+"3|Histoire|Les 5 grandes dynasties de rois de France|Mérovingiens;Carolingiens;Capétiens;Valois;Bourbons|Orléans;Bonaparte",
+"3|Histoire|Les 5 premiers présidents des États-Unis|Washington;Adams/John Adams;Jefferson;Madison;Monroe",
+"1|Histoire|Les 5 présidents des États-Unis de 1993 à 2025|Clinton;Bush/George Bush/George W Bush;Obama;Trump;Biden",
+"3|Histoire|5 des 7 Merveilles du monde antique|Pyramide/Pyramide de Kheops/Kheops/Pyramides;Jardins/Jardins de Babylone/Babylone;Zeus/Statue de Zeus;Artémis/Temple d'Artemis;Mausolée/Mausolee d'Halicarnasse/Halicarnasse;Colosse/Colosse de Rhodes;Phare/Phare d'Alexandrie",
+"3|Histoire|5 des 7 femmes qui reposent au Panthéon|Curie/Marie Curie;Veil/Simone Veil;Baker/Josephine Baker;Tillion/Germaine Tillion;Manouchian/Melinee Manouchian;Berthelot/Sophie Berthelot;Anthonioz/Genevieve de Gaulle/Genevieve de Gaulle-Anthonioz",
+"2|Histoire|Les 5 pays vainqueurs des 5 dernières Coupes du monde de foot (2006-2022)|Italie;Espagne;Allemagne;France;Argentine",
+];
+QB.push(
+"1|Sciences|Les 5 planètes visibles à l'œil nu|Mercure;Vénus;Mars;Jupiter;Saturne",
+"1|Sciences|Les 5 planètes les plus proches du Soleil|Mercure;Vénus;Terre;Mars;Jupiter",
+"2|Sciences|Les 5 plus grosses planètes du système solaire|Jupiter;Saturne;Uranus;Neptune;Terre",
+"3|Sciences|Les 5 planètes naines reconnues officiellement|Cérès;Pluton;Éris;Hauméa/Haumea;Makémaké/Makemake",
+"3|Sciences|Les 5 plus grandes lunes du système solaire|Ganymède;Titan;Callisto;Io;Lune",
+"1|Sciences|Les 5 sens|Vue/Vision;Ouïe/Audition;Odorat;Goût;Toucher",
+"2|Sciences|Les 5 saveurs de base|Sucré;Salé;Acide;Amer;Umami",
+"2|Sciences|Les 5 premiers éléments du tableau périodique|Hydrogène;Hélium;Lithium;Béryllium;Bore",
+"3|Sciences|Les 5 premiers gaz nobles du tableau périodique|Hélium;Néon;Argon;Krypton;Xénon",
+"1|Sciences|Les 5 grandes classes de vertébrés|Mammifères;Oiseaux;Poissons;Reptiles;Amphibiens/Batraciens",
+"3|Sciences|Les 5 règnes du vivant (classification de Whittaker)|Animaux/Animal;Végétaux/Plantes/Vegetal;Champignons;Protistes;Monères/Bacteries/Procaryotes",
+"2|Sciences|Les 5 couches de l'atmosphère terrestre|Troposphère;Stratosphère;Mésosphère;Thermosphère;Exosphère",
+"1|Sciences|Les 5 doigts de la main|Pouce;Index;Majeur;Annulaire;Auriculaire/Petit doigt",
+"2|Sciences|Les 5 premiers nombres premiers (en lettres)|Deux/2;Trois/3;Cinq/5;Sept/7;Onze/11",
+"3|Sciences|Les 5 solides de Platon (polyèdres réguliers)|Tétraèdre;Cube/Hexaedre;Octaèdre;Dodécaèdre;Icosaèdre",
+"3|Sciences|Les 5 grands félins du genre Panthera|Lion;Tigre;Léopard/Panthere;Jaguar;Once/Panthere des neiges/Leopard des neiges/Irbis",
+"2|Sciences|Les 5 animaux du « Big Five » africain|Lion;Léopard/Panthere;Éléphant;Rhinocéros;Buffle",
+"3|Sciences|5 des 7 unités de base du système international|Mètre;Kilogramme/Kilo;Seconde;Ampère;Kelvin;Mole;Candela",
+"1|Sciences|5 des 7 couleurs de l'arc-en-ciel|Rouge;Orange;Jaune;Vert;Bleu;Indigo;Violet",
+"1|Culture|Les 5 membres de la famille Simpson|Homer;Marge;Bart;Lisa;Maggie",
+"2|Culture|Les 5 émotions du premier film Vice-Versa|Joie;Tristesse;Colère;Peur;Dégoût",
+"2|Culture|Les 5 membres des Spice Girls (surnoms)|Scary;Sporty;Baby;Ginger;Posh",
+"2|Culture|Les 5 membres de One Direction|Harry/Harry Styles/Styles;Niall/Niall Horan/Horan;Liam/Liam Payne/Payne;Louis/Louis Tomlinson/Tomlinson;Zayn/Zayn Malik/Malik",
+"3|Culture|Les 5 frères des Jackson Five|Jackie;Tito;Jermaine;Marlon;Michael",
+"1|Culture|Les 5 membres de la bande de Scooby-Doo|Scooby/Scooby-Doo;Sammy/Shaggy;Fred;Daphné;Véra/Velma",
+"3|Culture|Les 5 membres du Club des Cinq|Claude;François;Mick;Annie;Dagobert",
+"2|Culture|Les 5 frères de la série Malcolm|Francis;Reese;Malcolm;Dewey;Jamie",
+"1|Culture|Les 5 membres de la famille des Indestructibles|Bob/Mr Indestructible/Monsieur Indestructible;Hélène/Elastigirl;Violette;Flèche/Dash;Jack-Jack/Jack Jack",
+"1|Culture|5 des 7 nains de Blanche-Neige (Disney)|Prof;Grincheux;Joyeux;Dormeur;Timide;Atchoum;Simplet",
+"2|Culture|5 des 6 amis de la série Friends|Rachel;Monica;Phoebe;Joey;Chandler;Ross",
+"2|Culture|Les 5 non-hobbits de la Communauté de l'anneau|Gandalf;Aragorn/Grand-Pas;Legolas;Gimli;Boromir",
+"2|Culture|Les 5 premiers tomes de Harry Potter (mot-clé du titre)|Sorciers/Ecole des sorciers/Harry Potter a l'ecole des sorciers;Secrets/Chambre des secrets/La chambre des secrets;Azkaban/Prisonnier d'Azkaban/Le prisonnier d'Azkaban;Coupe de feu/La coupe de feu;Phénix/Ordre du phenix/L'ordre du phenix",
+"3|Culture|Les 5 premiers acteurs à avoir joué James Bond au cinéma|Connery/Sean Connery;Lazenby/George Lazenby;Moore/Roger Moore;Dalton/Timothy Dalton;Brosnan/Pierce Brosnan",
+"3|Culture|Les 5 instruments du quintette à vent classique|Flûte;Hautbois;Clarinette;Basson;Cor",
+"1|Culture|Les 4 Tortues Ninja et leur maître|Léonardo/Leonard/Leo;Michelangelo/Mickael/Mike;Donatello/Donnie;Raphaël/Raph;Splinter/Maitre Splinter",
+"2|Culture|Les 5 couleurs des Power Rangers d'origine|Rouge;Bleu;Jaune;Rose;Noir",
+"3|Culture|Les 5 sauces mères de la cuisine française|Béchamel;Velouté;Espagnole;Tomate;Hollandaise",
+"3|Culture|Les 5 fromages AOP d'Auvergne|Cantal;Salers;Saint-Nectaire;Bleu/Bleu d'Auvergne;Fourme/Fourme d'Ambert",
+"1|Langue|Les 5 jours de travail de la semaine|Lundi;Mardi;Mercredi;Jeudi;Vendredi",
+"1|Langue|Les 5 premiers mois de l'année|Janvier;Février;Mars;Avril;Mai",
+"1|Langue|5 des 6 voyelles de l'alphabet|A;E;I;O;U;Y",
+"1|Langue|5 des 7 conjonctions de coordination (« mais ou et donc or ni car »)|Mais;Ou;Et;Donc;Or;Ni;Car",
+"2|Langue|Les 5 premières lettres de l'alphabet grec|Alpha;Bêta;Gamma;Delta;Epsilon",
+"3|Langue|Les 5 dernières lettres de l'alphabet grec|Upsilon;Phi;Chi/Khi;Psi;Oméga",
+"1|Langue|Les nombres de 1 à 5 en anglais|One;Two;Three;Four;Five",
+"1|Langue|Les nombres de 1 à 5 en espagnol|Uno;Dos;Tres;Cuatro;Cinco",
+"3|Langue|Les nombres de 1 à 5 en japonais|Ichi;Ni;San;Shi/Yon;Go",
+"2|Langue|Du lundi au vendredi en anglais|Monday;Tuesday;Wednesday;Thursday;Friday",
+"1|Divers|Les 5 dernières lettres de l'alphabet|V;W;X;Y;Z",
+"1|Divers|Les 5 pièces des échecs autres que le pion|Roi;Dame/Reine;Tour;Fou;Cavalier",
+"1|Divers|Les 5 premiers signes du zodiaque|Bélier;Taureau;Gémeaux;Cancer;Lion",
+"2|Divers|Les 5 derniers signes du zodiaque|Scorpion;Sagittaire;Capricorne;Verseau;Poissons",
+"3|Divers|Les 5 premiers animaux du zodiaque chinois|Rat;Bœuf/Buffle;Tigre;Lapin/Lievre;Dragon",
+"2|Divers|Les 5 éléments de l'astrologie chinoise|Bois;Feu;Terre;Métal;Eau",
+"1|Divers|5 des 7 notes de la gamme|Do/Ut;Ré;Mi;Fa;Sol;La;Si",
+"2|Divers|5 des 6 couleurs de ceinture de judo avant la noire|Blanche;Jaune;Orange;Verte;Bleue;Marron",
+);
+QB.push(
+"2|Actu France|5 des 7 Premiers ministres d'Emmanuel Macron|Philippe/Edouard Philippe;Castex/Jean Castex;Borne/Elisabeth Borne;Attal/Gabriel Attal;Barnier/Michel Barnier;Bayrou/Francois Bayrou;Lecornu/Sebastien Lecornu",
+"2|Actu France|Les 5 premiers pays au tableau des médailles des JO de Paris 2024|États-Unis/USA/Etats Unis;Chine;Japon;Australie;France",
+"2|Actu France|Cite 5 Français champions olympiques en individuel à Paris 2024|Marchand/Leon Marchand;Riner/Teddy Riner;Beaugrand/Cassandre Beaugrand;Vaast/Kauli Vaast;Gestin/Nicolas Gestin;Daudet/Joris Daudet;Apithy-Brunet/Apithy/Manon Apithy-Brunet;Ferrand-Prévot/Pauline Ferrand-Prevot;Thomas/Benjamin Thomas",
+"3|Actu France|Les villes des 5 prochains Jeux olympiques (2026 à 2034)|Milan/Milan-Cortina/Cortina;Los Angeles/LA;Alpes/Alpes francaises;Brisbane;Salt Lake City/Salt Lake",
+"3|Actu France|Les 5 dernières villes des JO d'hiver (2010 à 2026)|Vancouver;Sotchi;Pyeongchang;Pékin/Beijing;Milan/Milan-Cortina/Cortina",
+"3|Actu France|Les 5 représentants de la France à l'Eurovision de 2021 à 2025|Barbara Pravi/Pravi;Alvan et Ahez/Alvan/Ahez;La Zarra/Zarra;Slimane;Louane",
+"2|Actu France|5 des 6 Français Ballon d'or|Kopa;Platini;Papin;Zidane;Benzema;Dembélé",
+"3|Actu France|Les 5 derniers lauréats différents du Ballon d'or (2018 à 2025)|Dembélé;Rodri;Messi;Benzema;Modric",
+"1|Actu France|5 des 6 premières chaînes de la TNT (numéros 1 à 6)|TF1/TF 1;France 2;France 3;Canal+/Canal plus/Canal;France 5;M6",
+"2|Sport|5 des 6 nations du Tournoi des Six Nations|France;Angleterre;Écosse;Irlande;Galles/Pays de Galles;Italie",
+"2|Sport|Les 5 postes au basket|Meneur;Arrière;Ailier;Ailier fort;Pivot",
+"1|Sport|5 des 6 pays qui ont gagné la Coupe du monde de foot plusieurs fois|Brésil;Allemagne;Italie;Argentine;France;Uruguay",
+"2|Sport|Les 5 derniers pays organisateurs de la Coupe du monde de foot (2006 à 2022)|Allemagne;Afrique du Sud;Brésil;Russie;Qatar",
+"3|Sport|Les 5 derniers Français vainqueurs du Tour de France|Hinault;Fignon;Thévenet;Pingeon;Aimar",
+"3|Sport|Les 5 clubs les plus titrés en championnat de France de foot|PSG/Paris/Paris Saint-Germain;Saint-Étienne/ASSE;Marseille/OM;Nantes;Monaco",
+"1|Pop|Les 5 évolutions d'Évoli des deux premières générations|Aquali;Voltali;Pyroli;Mentali;Noctali",
+"2|Pop|Les 5 premiers Pokémon du Pokédex (n°1 à 5)|Bulbizarre;Herbizarre;Florizarre;Salamèche;Reptincel",
+"3|Pop|Les 5 premières régions Pokémon|Kanto;Johto;Hoenn;Sinnoh;Unys",
+"1|Pop|5 des 6 matériaux d'outils dans Minecraft|Bois;Pierre;Fer;Or;Diamant;Netherite",
+"3|Pop|Les 5 chevaliers de bronze principaux de Saint Seiya|Seiya;Shiryu;Hyoga;Shun;Ikki",
+"2|Pop|Les 5 premiers membres de l'équipage de Luffy (dans l'ordre d'arrivée)|Zoro;Nami;Usopp;Sanji;Chopper",
+"2|Pop|Les 5 Kage des grands pays ninjas de Naruto|Hokage;Kazekage;Mizukage;Raikage;Tsuchikage",
+"2|Pop|5 des 6 Pierres d'infinité (Marvel)|Espace;Esprit;Réalité;Pouvoir;Temps;Âme",
+"1|Pop|5 des 6 Avengers du premier film (2012)|Iron Man/Ironman;Captain/Captain America;Thor;Hulk;Black Widow/Veuve noire;Hawkeye/Oeil de faucon",
+"2|Pop|5 des 7 membres de BTS|RM;Jin;Suga;J-Hope/Jhope;Jimin;V;Jungkook",
+"2|Pop|5 des 6 consoles de salon Nintendo sorties avant la Switch|NES;Super Nintendo/SNES;N64/Nintendo 64;GameCube/Game Cube;Wii;Wii U",
+"2|Pop|Pac-Man et les 4 fantômes|Pac-Man/Pacman;Blinky;Pinky;Inky;Clyde",
+"2|Pop|5 des 7 péchés capitaux|Orgueil;Avarice;Envie;Colère;Luxure;Gourmandise;Paresse",
+);
+/* ---------- fonds : paysages dessinés en canvas, une scène par chapitre ---------- */
+const Scene=(()=>{
+const cv=document.getElementById("bg"),ctx=cv.getContext("2d");
+const backC=document.createElement("canvas"),frontC=document.createElement("canvas");
+const aur=document.createElement("canvas");aur.width=160;aur.height=90;const ax=aur.getContext("2d");
+const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+let W=0,H=0,dpr=1,kind=0,seed=1,P=[],S=null,raf=0,last=0,R=Math.random;
+const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const lin=(c,x0,y0,x1,y1,st)=>{const g=c.createLinearGradient(x0,y0,x1,y1);st.forEach(s=>g.addColorStop(s[0],s[1]));return g;};
+const rad=(c,x,y,r0,r1,st)=>{const g=c.createRadialGradient(x,y,r0,x,y,r1);st.forEach(s=>g.addColorStop(s[0],s[1]));return g;};
+const sky=(c,st)=>{const g=lin(c,0,0,0,H,st);c.fillStyle=g;c.fillRect(0,0,W,H);return g;};
+const glow=(c,x,y,r,col)=>{c.fillStyle=rad(c,x,y,0,r,[[0,col],[1,"rgba(0,0,0,0)"]]);c.fillRect(x-r,y-r,2*r,2*r);};
+const disc=(c,x,y,r,col)=>{c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill();};
+function ridge(c,y,amp,rough,fill){
+  const n=129,p=new Array(n).fill(0);p[0]=(R()-.5)*amp;p[n-1]=(R()-.5)*amp;
+  let step=n-1,a=amp;while(step>1){const h=step/2;for(let i=h;i<n;i+=step)p[i]=(p[i-h]+p[i+h])/2+(R()-.5)*a;a*=rough;step=h;}
+  c.beginPath();c.moveTo(0,H);for(let i=0;i<n;i++)c.lineTo(i/(n-1)*W,y+p[i]);c.lineTo(W,H);c.closePath();c.fillStyle=fill;c.fill();
+}
+function hill(c,y,amp,f,ph,fill){c.beginPath();c.moveTo(0,H);
+  for(let x=0;x<=W+8;x+=8)c.lineTo(x,y+Math.sin(x/W*f+ph)*amp+Math.sin(x/W*f*2.3+ph*1.7)*amp*.35);
+  c.lineTo(W,H);c.closePath();c.fillStyle=fill;c.fill();}
+function cloud(c,x,y,s,col){c.fillStyle=col;c.beginPath();
+  [[0,0,1],[.9,.15,.8],[-.9,.2,.75],[.45,-.45,.75],[-.35,-.4,.7],[1.6,.35,.55],[-1.6,.35,.5]].forEach(q=>{c.moveTo(x+q[0]*s+q[2]*s,y+q[1]*s);c.arc(x+q[0]*s,y+q[1]*s,q[2]*s,0,7);});c.fill();}
+function pines(c,y,h,col,dens){c.fillStyle=col;
+  for(let x=-20;x<W+20;x+=dens*(.6+R()*.8)){const th=h*(.6+R()*.7),tw=th*.3;c.beginPath();c.moveTo(x,y-th);c.lineTo(x+tw,y+2);c.lineTo(x-tw,y+2);c.closePath();c.fill();}
+  c.fillRect(0,y,W,H-y);}
+function stars(c,n,maxY,band){for(let i=0;i<n;i++){let x=R()*W,y=R()*maxY;
+  if(band&&R()<.6){const u=R();x=u*W;y=maxY*(.85-u*.7)+(R()+R()-1)*maxY*.12;}
+  const r=R()*1.3+.3;c.fillStyle="rgba(255,255,255,"+(.25+R()*.75)+")";c.fillRect(x,y,r,r);}}
+const twinkles=n=>Array.from({length:n},()=>({x:R()*W,y:R()*H*.6,r:R()*1.6+.6,ph:R()*7,sp:.001+R()*.003}));
+function drawTw(c,t){P.forEach(s=>{if(s.x===undefined||s.sp===undefined)return;const a=.25+.75*Math.abs(Math.sin(t*s.sp+s.ph));c.fillStyle="rgba(255,255,255,"+a+")";c.fillRect(s.x,s.y,s.r,s.r);});}
+let shoot=[];
+function shooting(c,dt,rate){if(R()<dt*rate)shoot.push({x:R()*W*.8+W*.1,y:R()*H*.3,vx:-.5-R()*.4,vy:.25+R()*.2,l:1});
+  shoot=shoot.filter(s=>s.l>0);shoot.forEach(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt/900;
+    c.strokeStyle=lin(c,s.x,s.y,s.x-s.vx*160,s.y-s.vy*160,[[0,"rgba(255,255,255,"+s.l+")"],[1,"rgba(255,255,255,0)"]]);
+    c.lineWidth=2;c.beginPath();c.moveTo(s.x,s.y);c.lineTo(s.x-s.vx*160,s.y-s.vy*160);c.stroke();});}
+
+const SCENES=[
+/* 1 Collines — façon fond d'écran Windows */
+{name:"Fond d'écran",accent:"#ffd23f",
+ back(c){sky(c,[[0,"#0d5bd1"],[.45,"#3d8fe6"],[.75,"#9fd0fa"],[1,"#dff1ff"]]);glow(c,W*(.7+R()*.2),H*.12,H*.35,"rgba(255,255,240,.55)");},
+ front(c){hill(c,H*.62,H*.05,3+R()*2,R()*6,lin(c,0,H*.55,0,H,[[0,"#7cc24a"],[1,"#3f8f22"]]));
+   hill(c,H*.74,H*.07,2+R(),R()*6,lin(c,0,H*.66,0,H,[[0,"#5fb52c"],[.5,"#3b9a17"],[1,"#24680c"]]));},
+ init(){return Array.from({length:7},()=>({cx:R()*W*1.3,cy:H*(.08+R()*.35),s:30+R()*55,v:.006+R()*.012}));},
+ mid(c,t,dt){P.forEach(p=>{p.cx+=p.v*dt;if(p.cx-p.s*3>W)p.cx=-p.s*3;cloud(c,p.cx,p.cy,p.s,"rgba(255,255,255,.92)");});}},
+/* 2 Coucher de soleil */
+{name:"Coucher de soleil",accent:"#ffb36b",
+ back(c){const g=sky(c,[[0,"#24104f"],[.35,"#7a2f8f"],[.55,"#ff6a5c"],[.62,"#ffb36b"],[.62,"#3b2a6e"],[1,"#100b2b"]]);
+   const sx=W*(.3+R()*.4),sy=H*.62,r=Math.min(W,H)*.1;glow(c,sx,sy,r*5,"rgba(255,170,90,.45)");
+   c.save();c.beginPath();c.rect(0,0,W,sy);c.clip();disc(c,sx,sy,r,"#ffe2a6");c.restore();
+   ridge(c,H*.6,H*.04,.55,"rgba(40,16,70,.85)");c.fillStyle=lin(c,0,H*.62,0,H,[[0,"#4a2d72"],[1,"#120c2e"]]);c.fillRect(0,H*.62,W,H*.38);
+   S={sx,r};},
+ init(){return Array.from({length:60},()=>({x:S.sx+(R()-.5)*S.r*(1+R()*3),y:H*.63+R()*H*.33,w:8+R()*40,ph:R()*7}));},
+ mid(c,t){P.forEach(p=>{const a=Math.max(0,Math.sin(t*.002+p.ph));c.fillStyle="rgba(255,200,140,"+a*.7+")";const k=(p.y-H*.6)/(H*.4);c.fillRect(p.x-p.w*(1+k)/2,p.y,p.w*(1+k),2);});}},
+/* 3 Lac de montagne */
+{name:"Lac de montagne",accent:"#9fe0ff",
+ back(c){sky(c,[[0,"#5c9fe0"],[.6,"#bcdcf5"],[1,"#eaf4fb"]]);glow(c,W*R(),H*.15,H*.3,"rgba(255,255,255,.5)");},
+ front(c){ridge(c,H*.42,H*.22,.55,"#9bb4d1");ridge(c,H*.5,H*.18,.55,"#6f8fb7");ridge(c,H*.58,H*.14,.55,"#4a6c96");
+   c.fillStyle=lin(c,0,H*.66,0,H,[[0,"#7fa6cf"],[1,"#2d4f7a"]]);c.fillRect(0,H*.66,W,H*.34);
+   c.fillStyle="rgba(255,255,255,.25)";for(let i=0;i<40;i++)c.fillRect(R()*W,H*.67+R()*H*.3,20+R()*80,1);
+   pines(c,H*.92,H*.12,"#1a3047",14);},
+ init(){return Array.from({length:5},()=>({x:R()*W,y:H*(.45+R()*.2),w:W*(.3+R()*.4),v:.004+R()*.008}));},
+ top(c,t,dt){P.forEach(p=>{p.x+=p.v*dt;if(p.x-p.w>W)p.x=-p.w;c.fillStyle=rad(c,p.x,p.y,0,p.w*.5,[[0,"rgba(255,255,255,.22)"],[1,"rgba(255,255,255,0)"]]);c.save();c.translate(p.x,p.y);c.scale(1,.18);c.beginPath();c.arc(0,0,p.w*.5,0,7);c.restore();c.fill();});}},
+/* 4 Forêt brumeuse */
+{name:"Forêt brumeuse",accent:"#c6f26b",
+ back(c){sky(c,[[0,"#eaf2d8"],[.5,"#b9d6b4"],[1,"#7fae94"]]);const sx=W*(.2+R()*.6);glow(c,sx,H*.2,H*.5,"rgba(255,250,210,.7)");
+   c.save();c.globalCompositeOperation="lighter";for(let i=0;i<6;i++){const a=(R()-.5)*.9;c.fillStyle="rgba(255,250,220,.05)";c.beginPath();c.moveTo(sx,H*.2);c.lineTo(sx+Math.tan(a-.08)*H,H);c.lineTo(sx+Math.tan(a+.08)*H,H);c.closePath();c.fill();}c.restore();},
+ front(c){const cols=["#8fb79f","#5f8f75","#3c6b52","#1f4232","#0e2519"];cols.forEach((col,i)=>{pines(c,H*(.5+i*.11),H*(.14+i*.05),col,18+i*6);
+   c.fillStyle="rgba(230,240,225,"+(.28-i*.05)+")";c.fillRect(0,H*(.46+i*.11),W,H*.08);});},
+ init(){return Array.from({length:40},()=>({x:R()*W,y:R()*H,v:.01+R()*.02,ph:R()*7,r:1+R()*2.5}));},
+ top(c,t,dt){P.forEach(p=>{p.y-=p.v*dt;if(p.y<-10)p.y=H+10;const x=p.x+Math.sin(t*.001+p.ph)*12,a=.4+.6*Math.abs(Math.sin(t*.002+p.ph));glow(c,x,p.y,p.r*5,"rgba(255,250,170,"+a*.6+")");});}},
+/* 5 Désert doré */
+{name:"Désert doré",accent:"#ffcf70",
+ back(c){sky(c,[[0,"#e07a3c"],[.4,"#f6b65c"],[.7,"#fde0a2"],[1,"#fff1cf"]]);const sx=W*(.2+R()*.6);glow(c,sx,H*.3,H*.45,"rgba(255,240,200,.8)");disc(c,sx,H*.3,Math.min(W,H)*.08,"#fff6dc");},
+ front(c){hill(c,H*.6,H*.04,4,R()*6,"#e9a85a");hill(c,H*.68,H*.06,3,R()*6,lin(c,0,H*.6,0,H,[[0,"#f0b867"],[1,"#c97b35"]]));
+   hill(c,H*.8,H*.07,2.2,R()*6,lin(c,0,H*.72,0,H,[[0,"#d98f45"],[1,"#8f4f1e"]]));},
+ init(){return Array.from({length:70},()=>({x:R()*W,y:H*(.55+R()*.45),l:10+R()*40,v:.15+R()*.25}));},
+ top(c,t,dt){c.fillStyle="rgba(255,230,180,.35)";P.forEach(p=>{p.x+=p.v*dt;if(p.x>W+50)p.x=-50;c.fillRect(p.x,p.y,p.l,1);});}},
+/* 6 Sakura */
+{name:"Sakura",accent:"#ff8fc0",
+ back(c){sky(c,[[0,"#8fc3f2"],[.45,"#f8c9dc"],[.75,"#ffe6d9"],[1,"#fff3ea"]]);glow(c,W*(.2+R()*.6),H*.25,H*.3,"rgba(255,255,255,.6)");
+   const mx=W*(.3+R()*.4),top=H*.3,bw=W*.55,by=H*.72;
+   c.fillStyle=lin(c,0,top,0,by,[[0,"#6f7fb8"],[1,"#b7a6d6"]]);c.beginPath();c.moveTo(mx-bw/2,by);c.lineTo(mx-W*.05,top);c.lineTo(mx+W*.05,top);c.lineTo(mx+bw/2,by);c.closePath();c.fill();
+   c.fillStyle="#fbf7ff";c.beginPath();c.moveTo(mx-W*.05,top);c.lineTo(mx+W*.05,top);c.lineTo(mx+W*.11,top+H*.09);
+   for(let i=0;i<=6;i++)c.lineTo(mx+W*.11-i*W*.22/6,top+H*(.09+(i%2?.035:0)));c.closePath();c.fill();},
+ front(c){for(let i=0;i<30;i++)cloud(c,R()*W,H*(.74+R()*.12),18+R()*30,["#f6a9c8","#f9bdd5","#ee93b9"][i%3]);
+   c.fillStyle=lin(c,0,H*.8,0,H,[[0,"#e98bb3"],[1,"#7a3d6b"]]);c.fillRect(0,H*.82,W,H*.18);
+   c.strokeStyle="#3d2233";c.lineCap="round";const br=(x,y,a,l,w,d)=>{if(d>5||l<8)return;const x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l;c.lineWidth=w;c.beginPath();c.moveTo(x,y);c.lineTo(x2,y2);c.stroke();
+     if(d>2)for(let k=0;k<4;k++)cloud(c,x2+(R()-.5)*30,y2+(R()-.5)*20,6+R()*8,"rgba(255,170,205,.95)");
+     br(x2,y2,a+(R()-.3)*.8,l*.72,w*.65,d+1);br(x2,y2,a-(R()-.2)*.9,l*.68,w*.6,d+1);};
+   br(-10,H*.05,.35,Math.min(W,H)*.22,14,0);},
+ init(){return Array.from({length:70},()=>({x:R()*W,y:R()*H,vy:.03+R()*.05,vx:.02+R()*.04,r:3+R()*4,rot:R()*7,vr:(R()-.5)*.004,ph:R()*7}));},
+ top(c,t,dt){P.forEach(p=>{p.y+=p.vy*dt;p.x+=p.vx*dt+Math.sin(t*.0015+p.ph)*.4;p.rot+=p.vr*dt;if(p.y>H+10){p.y=-10;p.x=R()*W;}if(p.x>W+10)p.x=-10;
+   c.save();c.translate(p.x,p.y);c.rotate(p.rot);c.fillStyle="rgba(255,182,213,.9)";c.beginPath();c.ellipse(0,0,p.r,p.r*.55,0,0,7);c.fill();c.restore();});}},
+/* 7 Ville néon */
+{name:"Ville néon",accent:"#ff4fb0",
+ back(c){const g=sky(c,[[0,"#07021c"],[.35,"#2a0a55"],[.6,"#ff2e88"],[.6,"#14052a"],[1,"#0a0118"]]);stars(c,120,H*.35);
+   const sx=W*.5,sy=H*.6,r=Math.min(W,H)*.2;glow(c,sx,sy-r*.3,r*2.6,"rgba(255,60,160,.4)");
+   c.save();c.beginPath();c.rect(0,0,W,sy);c.clip();c.fillStyle=lin(c,0,sy-r,0,sy,[[0,"#ffe46b"],[1,"#ff3d8b"]]);c.beginPath();c.arc(sx,sy,r,0,7);c.fill();
+   c.fillStyle=g;for(let i=0;i<7;i++){const y=sy-r*.08-i*r*.13,h=r*.065*(1-i*.11);c.fillRect(sx-r,y,2*r,h);}c.restore();},
+ front(c){const hy=H*.6;for(let L=0;L<2;L++){let x=-10;while(x<W){const w=20+R()*55,h=H*(.05+R()*(L?.22:.14));const col=L?"#12051f":"#2b0f46";c.fillStyle=col;c.fillRect(x,hy-h,w,h);
+     for(let wy=hy-h+6;wy<hy-4;wy+=9)for(let wx=x+4;wx<x+w-4;wx+=8)if(R()<.3){c.fillStyle=R()<.5?"rgba(255,220,120,.85)":"rgba(90,230,255,.8)";c.fillRect(wx,wy,3,4);}x+=w+R()*6;}}
+   c.fillStyle="#0a0118";c.fillRect(0,hy,W,H-hy);},
+ init(){return [];},
+ top(c,t){const hy=H*.6,off=(t*.00025)%1;c.strokeStyle="rgba(255,60,200,.55)";c.lineWidth=1.5;c.beginPath();
+   for(let i=0;i<14;i++){const z=(i+off)/14,y=hy+(H-hy)*z*z;c.moveTo(0,y);c.lineTo(W,y);}
+   for(let i=-12;i<=12;i++){c.moveTo(W/2+i*W*.02,hy);c.lineTo(W/2+i*W*.16,H);}c.stroke();}},
+/* 8 Nuit étoilée */
+{name:"Nuit étoilée",accent:"#9ec5ff",
+ back(c){sky(c,[[0,"#030722"],[.5,"#10275e"],[.8,"#2f5f9f"],[1,"#6f9fd6"]]);
+   c.save();c.globalCompositeOperation="lighter";for(let i=0;i<14;i++){const u=R();glow(c,u*W,H*.6*(.85-u*.7)+(R()-.5)*H*.1,H*(.08+R()*.1),"rgba(140,120,255,.12)");}c.restore();
+   stars(c,900,H*.75,true);const cx=W*(.55+R()*.3),cy=H*(.12+R()*.1);
+   c.save();c.globalCompositeOperation="lighter";c.strokeStyle=lin(c,cx,cy,cx-W*.35,cy+H*.25,[[0,"rgba(220,240,255,.9)"],[1,"rgba(120,160,255,0)"]]);c.lineWidth=4;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx-W*.35,cy+H*.25);c.stroke();glow(c,cx,cy,30,"rgba(230,245,255,.9)");c.restore();},
+ front(c){hill(c,H*.84,H*.05,2,R()*6,"#04081a");const tx=W*(.15+R()*.7),ty=H*.82;c.fillStyle="#04081a";c.fillRect(tx-3,ty-H*.12,6,H*.12);cloud(c,tx,ty-H*.14,H*.03,"#04081a");},
+ init(){return twinkles(90);},
+ mid(c,t,dt){drawTw(c,t);shooting(c,dt,.0004);}},
+/* 9 Aurore boréale */
+{name:"Aurore boréale",accent:"#5dffc0",
+ back(c){sky(c,[[0,"#010611"],[.5,"#062338"],[1,"#0d3b4c"]]);stars(c,500,H*.7);},
+ front(c){ridge(c,H*.62,H*.22,.55,lin(c,0,H*.4,0,H*.8,[[0,"#e8f3ff"],[.4,"#9bb7d4"],[1,"#2c4560"]]));
+   c.fillStyle=lin(c,0,H*.78,0,H,[[0,"#0d2a3a"],[1,"#04121b"]]);c.fillRect(0,H*.78,W,H*.22);pines(c,H*.86,H*.1,"#03101a",12);},
+ init(){return twinkles(60);},
+ mid(c,t){drawTw(c,t);ax.clearRect(0,0,160,90);ax.globalCompositeOperation="lighter";
+   for(let k=0;k<3;k++)for(let x=0;x<160;x+=2){const y=18+k*7+Math.sin(x/160*6+t*.0004*(k+1)+k)*7+Math.sin(x/160*13-t*.0006)*3,h=16+10*Math.sin(x/160*9+t*.0005+k),a=.22+.18*Math.sin(x/160*20+t*.001*(k+1));
+     ax.fillStyle=lin(ax,0,y-h,0,y,[[0,"rgba(0,0,0,0)"],[.75,k===1?"rgba(150,90,255,"+a+")":"rgba(60,255,170,"+a+")"],[1,"rgba(0,0,0,0)"]]);ax.fillRect(x,y-h,2,h);}
+   c.drawImage(aur,0,0,W,H*.75);}},
+/* 10 Galaxie */
+{name:"Galaxie",accent:"#d6a2ff",
+ back(c){c.fillStyle="#03010a";c.fillRect(0,0,W,H);c.save();c.globalCompositeOperation="lighter";
+   const cols=["rgba(160,60,255,.10)","rgba(255,60,160,.09)","rgba(60,140,255,.10)","rgba(60,255,220,.06)"];
+   for(let i=0;i<60;i++){const u=R();glow(c,u*W+(R()-.5)*W*.2,H*(.2+u*.5)+(R()-.5)*H*.25,H*(.06+R()*.2),cols[i%4]);}c.restore();
+   stars(c,1400,H,false);
+   const px=W*(R()<.5?.18:.82),py=H*(.25+R()*.2),pr=Math.min(W,H)*.14;
+   c.fillStyle=rad(c,px-pr*.4,py-pr*.4,pr*.1,pr*1.2,[[0,"#ffd2a1"],[.5,"#c0627a"],[1,"#2a0f2e"]]);c.beginPath();c.arc(px,py,pr,0,7);c.fill();
+   c.strokeStyle="rgba(255,220,190,.55)";c.lineWidth=pr*.08;c.beginPath();c.ellipse(px,py,pr*1.9,pr*.4,-.35,0,7);c.stroke();
+   disc(c,px+(px<W/2?pr*2.6:-pr*2.6),py+pr*1.6,pr*.18,"#9fb3d9");},
+ init(){return twinkles(120);},
+ mid(c,t,dt){drawTw(c,t);shooting(c,dt,.0003);}},
+];
+
+function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  [cv,backC,frontC].forEach(k=>{k.width=Math.round(W*dpr);k.height=Math.round(H*dpr);});}
+function paint(){
+  if(!W)size();R=mul(seed*7919+kind*31);shoot=[];const sc=SCENES[kind%10];
+  const b=backC.getContext("2d"),f=frontC.getContext("2d");
+  b.setTransform(dpr,0,0,dpr,0,0);f.setTransform(dpr,0,0,dpr,0,0);b.clearRect(0,0,W,H);f.clearRect(0,0,W,H);
+  sc.back(b);if(sc.front)sc.front(f);P=sc.init?sc.init():[];frame(performance.now(),true);
+}
+function frame(t,force){
+  const sc=SCENES[kind%10];const dt=Math.min(60,t-(last||t));
+  if(!force&&dt<30&&last){raf=requestAnimationFrame(frame);return;}
+  last=t;ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(backC,0,0);ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(sc.mid)sc.mid(ctx,t,reduced?0:dt);
+  ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(frontC,0,0);ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(sc.top)sc.top(ctx,t,reduced?0:dt);
+  if(!reduced&&!document.hidden){cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}
+}
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{size();paint();},150);});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!reduced){last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}});
+return{
+  set(chapterIdx,level){const k=chapterIdx%10,round=Math.floor(chapterIdx/10);
+    if(k===kind&&level===seed&&W)return;kind=k;seed=level;cv.style.filter=round?"hue-rotate("+(round*47)%360+"deg) saturate(1.15)":"";paint();},
+  info:i=>SCENES[i%10]
+};
+})();
+(()=>{
+const $=id=>document.getElementById(id);
+const KEY="quintette.v2",BANKV=3;
+const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ROMAN=["","","II","III","IV","V","VI","VII","VIII","IX","X"];
+function chapter(L){const i=Math.floor((L-1)/10),s=Scene.info(i),r=Math.floor(i/10)+1;return{idx:i,accent:s.accent,label:s.name+(r>1?" "+(ROMAN[r]||r):"")};}
+function applyChapter(){const c=chapter(S.level);document.documentElement.style.setProperty("--accent",c.accent);
+  $("chap").textContent="Ch."+(c.idx+1)+" · "+c.label;Scene.set(c.idx,S.level);}
+
+/* ---------- questions ---------- */
+const parseList=s=>s?s.split(";").map(a=>{const al=a.split("/").map(x=>x.trim()).filter(Boolean);
+  return{disp:al[0],keys:[...new Set(al.map(norm))].filter(Boolean)};}):[];
+const BANK=QB.map((line,id)=>{const p=line.split("|");return{id,d:+p[0],cat:p[1],q:p[2],cands:parseList(p[3]),extra:parseList(p[4]||"")};});
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const weights=L=>L<=5?[.6,.3,.1]:L<=20?[.4,.4,.2]:L<=60?[.3,.4,.3]:[.25,.35,.4];
+const isGap=ch=>/[\s'’\-.]/.test(ch);
+
+/* ---------- état ---------- */
+const fresh=()=>({level:1,phase:0,coins:50,seen:[],last:"",cur:null,bankV:3});
+let S=fresh();
+function load(){try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r&&r.level>0){S=Object.assign(fresh(),r);if(S.bankV!==BANKV){S.seen=[];S.cur=null;S.bankV=BANKV;}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const curB=()=>BANK[S.cur.id];
+const ans=k=>curB().cands[S.cur.slots[k]];
+const isDone=()=>S.cur.st.every(x=>x>0);
+
+function pickQ(){
+  const seen=new Set(S.seen);let pool=BANK.filter(b=>!seen.has(b.id));
+  if(!pool.length){S.seen=[];pool=BANK.slice();}
+  const w=weights(S.level),r=Math.random(),d=r<w[0]?1:r<w[0]+w[1]?2:3;
+  let sub=pool.filter(b=>b.d===d);if(!sub.length)sub=pool;
+  const other=sub.filter(b=>b.cat!==S.last);if(other.length)sub=other;
+  const b=sub[Math.floor(Math.random()*sub.length)];
+  const slots=shuffle(b.cands.map((_,i)=>i)).slice(0,5).sort((x,y)=>x-y);
+  S.seen.push(b.id);S.last=b.cat;
+  S.cur={id:b.id,slots,st:[0,0,0,0,0],rev:[[],[],[],[],[]],t0:Date.now()};
+  save();
+}
+function progress(n){
+  const before=S.level;S.phase+=n;
+  while(S.phase>=need(S.level)){S.phase-=need(S.level);S.level++;}
+  if(S.level===before)return null;
+  return{level:S.level,newChap:chapter(before).idx!==chapter(S.level).idx};
+}
+
+/* ---------- rendu ---------- */
+function renderHud(){
+  const c=$("coinNum");c.textContent=S.coins;c.className=S.coins>=10000?"xs":S.coins>=1000?"s":"";
+  $("lvlNum").textContent="NIV. "+S.level;
+  const n=need(S.level);$("barFill").style.width=(S.phase/n*100)+"%";
+  $("lvlSub").textContent="Phase "+S.phase+" / "+n+" · ensuite niveau "+(S.level+1);
+  $("hintBtn").disabled=isDone();
+  const cost=$("hintBtn").querySelector(".cost");if(cost)cost.textContent=S.coins<15?"gratuit":"15";
+}
+function sizeCells(){
+  const box=$("slots"),n=+box.dataset.n||12,w=box.clientWidth-32,gap=innerWidth<=560?3:Math.min(7,Math.max(3,innerWidth*.008));
+  box.style.setProperty("--cell",Math.max(14,Math.min(54,Math.floor((w-gap*(n-1))/n)))+"px");
+}
+function renderQ(){
+  const b=curB();
+  $("qcat").textContent=b.cat;
+  $("qdiff").innerHTML=[1,2,3].map(i=>'<i class="'+(i<=b.d?"on":"")+'"></i>').join("");
+  $("qdiff").title=["","Facile","Moyen","Difficile"][b.d];
+  $("qtext").textContent=b.q;
+  const list=S.cur.slots.map(i=>b.cands[i]);
+  const N=Math.max(10,...list.map(a=>[...a.disp].length));
+  const box=$("slots");box.innerHTML="";box.dataset.n=N;
+  list.forEach((a,k)=>{
+    const row=document.createElement("div");row.className="slot";row.id="slot"+k;
+    row.innerHTML='<span class="slot-n">'+(k+1)+'</span><div class="tiles" style="--n:'+N+'"></div>';
+    const tiles=row.querySelector(".tiles"),chars=[...a.disp.toUpperCase()];let count=0;
+    for(let i=0;i<N;i++){const t=document.createElement("span");
+      if(i<chars.length){if(isGap(chars[i]))t.className="t gap";else{t.className="t on";t.dataset.ch=chars[i];t.dataset.i=i;count++;}}
+      else t.className="t off";
+      tiles.appendChild(t);}
+    row.dataset.count=count;row.dataset.disp=a.disp;
+    box.appendChild(row);paintSlot(k,false);
+  });
+  sizeCells();setDoneUI();renderKeys();skipTick();
+}
+function paintSlot(k,anim,only){
+  const row=$("slot"+k);if(!row)return;const st=S.cur.st[k],rev=S.cur.rev[k];
+  row.classList.remove("found","hinted","missed");if(st)row.classList.add(["","found","hinted","missed"][st]);
+  row.setAttribute("aria-label","Réponse "+(k+1)+" : "+(st?row.dataset.disp:row.dataset.count+" lettres"));
+  row.querySelectorAll(".t.on").forEach((t,j)=>{const i=+t.dataset.i,show=st>0||rev.includes(i);
+    const was=t.textContent!=="";t.textContent=show?t.dataset.ch:"";t.classList.toggle("hint",!st&&rev.includes(i));
+    if(anim&&show&&!reduced&&(!was||st)&&(!only||only.includes(i))){t.style.animationDelay=(only?0:j*45)+"ms";t.classList.remove("flip");void t.offsetWidth;t.classList.add("flip");}});
+  if(anim&&st){row.classList.remove("ping");void row.offsetWidth;row.classList.add("ping");}
+}
+function setDoneUI(){
+  const d=isDone();$("playUI").hidden=d;$("playUI").style.display=d?"none":"flex";$("doneUI").hidden=!d;
+  if(d){const st=S.cur.st,f=st.filter(x=>x===1).length,h=st.filter(x=>x===2).length,m=st.filter(x=>x===3).length;
+    $("doneLine").textContent=[f+" trouvée"+(f>1?"s":""),h?h+" révélée"+(h>1?"s":"")+" par indices":"",m?m+" passée"+(m>1?"s":""):""].filter(Boolean).join(" · ");}
+  renderHud();renderKeys();
+}
+
+/* ---------- clavier ---------- */
+const ROWS=["AZERTYUIOP","QSDFGHJKLM","WXCVBN'-"];
+function buildKbd(){
+  const k=$("kbd");k.innerHTML="";
+  ROWS.forEach((r,ri)=>{const row=document.createElement("div");row.className="krow";
+    [...r].forEach(ch=>{const b=document.createElement("button");b.type="button";b.className="key";b.textContent=ch;b.dataset.k=ch;row.appendChild(b);});
+    if(ri===2){const b=document.createElement("button");b.type="button";b.className="key";b.textContent="⌫";b.dataset.k="BS";b.setAttribute("aria-label","Effacer");row.appendChild(b);}
+    k.appendChild(row);});
+  const last=document.createElement("div");last.className="krow";
+  last.innerHTML='<button type="button" class="key wide" data-k=" ">ESPACE</button><button type="button" class="key wide go" data-k="OK">VALIDER</button>';
+  k.appendChild(last);
+  const lg=document.createElement("div");lg.className="kbd-legend";
+  lg.innerHTML='<span><i style="background:color-mix(in srgb,var(--accent) 45%,#555)"></i>encore cachée</span><span><i style="background:rgba(255,255,255,.12)"></i>plus dans les mots restants</span>';
+  k.appendChild(lg);
+  k.addEventListener("click",e=>{const b=e.target.closest(".key");if(!b)return;press(b.dataset.k);});
+}
+function press(k){
+  if(isDone()||!$("modal").hidden)return;const inp=$("answer");
+  if(k==="OK")return submit();
+  if(k==="BS"){inp.value=inp.value.slice(0,-1);return;}
+  if(blocked(k))return buzz();
+  inp.value+=k==="'"||k==="-"||k===" "?k:k.toLowerCase();
+}
+function liveSet(){
+  const live=new Set();
+  if(S.cur&&!isDone())S.cur.st.forEach((st,k)=>{if(st)return;deacc(ans(k).disp).toUpperCase().replace(/[^A-Z]/g,"").split("").forEach(c=>live.add(c));});
+  return live;
+}
+function renderKeys(){
+  const live=liveSet();
+  document.querySelectorAll(".key").forEach(b=>{const c=b.dataset.k;if(c.length!==1||!/[A-Z]/.test(c))return;
+    const ok=live.has(c);b.classList.toggle("live",ok);b.classList.toggle("dead",!ok);b.disabled=!ok;});
+}
+function buzz(){const i=$("answer");i.classList.remove("buzz");void i.offsetWidth;i.classList.add("buzz");clearTimeout(buzz.t);buzz.t=setTimeout(()=>i.classList.remove("buzz"),340);if(navigator.vibrate)try{navigator.vibrate(40);}catch(e){}}
+function blocked(str){const live=liveSet();return deacc(str).toUpperCase().replace(/[^A-Z]/g,"").split("").some(c=>!live.has(c));}
+/* ---------- vérification ---------- */
+function judge(raw){
+  const n=norm(raw);if(!n)return{type:"bad"};
+  const b=curB(),sl=S.cur.slots,others=b.cands.filter((_,i)=>!sl.includes(i)).concat(b.extra);
+  const hit=f=>{for(let k=0;k<5;k++)if(b.cands[sl[k]].keys.some(x=>f(x,n)))return S.cur.st[k]?{type:"dup",k}:{type:"ok",k};
+    return others.some(a=>a.keys.some(x=>f(x,n)))?{type:"warn"}:null;};
+  return hit(same)||hit(near)||{type:"bad"};
+}
+
+/* ---------- animations ---------- */
+const clampX=(x,w)=>Math.max(8,Math.min(innerWidth-w-8,x));
+const wait=ms=>new Promise(r=>setTimeout(r,reduced?0:ms));
+const play=(el,kf,o)=>reduced?Promise.resolve():new Promise(r=>{el.animate(kf,Object.assign({fill:"forwards"},o)).onfinish=r;});
+function centerOn(el,f){const t=el.getBoundingClientRect();return[clampX(t.left+(t.width-f.offsetWidth)/2,f.offsetWidth),Math.max(8,t.top+(t.height-f.offsetHeight)/2)];}
+async function launch(text,cls,note,toRow){
+  const f=document.createElement("div");f.className="fly "+cls;f.textContent=text;
+  if(note){const n=document.createElement("small");n.textContent=note;f.appendChild(n);}
+  document.body.appendChild(f);
+  const q=$("qtext").getBoundingClientRect(),b=$("slots").getBoundingClientRect();
+  const x=clampX(b.left+(b.width-f.offsetWidth)/2,f.offsetWidth),y=Math.max(8,q.bottom+2),at=`translate(${x}px,${y}px)`;
+  f.style.transform=at;
+  await play(f,[{transform:at+" scale(.6)",opacity:0},{transform:at+" scale(1.06)",opacity:1,offset:.7},{transform:at,opacity:1}],{duration:140,easing:"ease-out"});
+  if(cls==="ok"){
+    await wait(110);const [x2,y2]=centerOn(toRow,f);
+    await play(f,[{transform:at},{transform:`translate(${x2}px,${y2}px) scale(.85)`,opacity:.95}],{duration:230,easing:"cubic-bezier(.5,0,.5,1)"});
+  }else{
+    await wait(cls==="warn"?650:cls==="dup"?380:200);
+    await play(f,[{transform:at,opacity:1},{transform:at+" scale(.85)",opacity:0}],{duration:150,easing:"ease-in"});
+  }
+  f.remove();
+}
+function floater(txt,fromEl,toEl,cb){
+  if(reduced){cb&&cb();return;}
+  const p=document.createElement("div");p.className="plus";p.textContent=txt;document.body.appendChild(p);
+  const a=fromEl.getBoundingClientRect(),b=toEl.getBoundingClientRect();
+  const x0=a.left+a.width/2-20,y0=a.top,x1=b.left+b.width/2-20,y1=Math.max(0,b.top+b.height/2-12);
+  play(p,[{transform:`translate(${x0}px,${y0}px)`,opacity:0},{transform:`translate(${x0}px,${y0-26}px)`,opacity:1,offset:.25},{transform:`translate(${x1}px,${y1}px) scale(.7)`,opacity:.85}],{duration:780,easing:"cubic-bezier(.5,0,.3,1)"}).then(()=>{p.remove();cb&&cb();});
+}
+function bumpCoins(){renderHud();const c=$("coins");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");}
+let toastT;
+function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t);}
+  t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},1900);}
+function banner(up,sub){
+  if(up&&up.newChap)applyChapter();renderHud();
+  const c=chapter(S.level),el=document.createElement("div");el.className="banner";
+  el.innerHTML='<div><b></b><span></span></div>';
+  el.querySelector("b").textContent="NIVEAU "+S.level;
+  el.querySelector("span").textContent=sub||(up&&up.newChap?"Nouveau décor : "+c.label:need(S.level)+" réponses pour le suivant");
+  document.body.appendChild(el);setTimeout(()=>el.remove(),reduced?1600:2500);
+}
+
+/* ---------- actions ---------- */
+function afterChange(ups){if(ups)banner(ups);if(isDone())setTimeout(setDoneUI,reduced?0:500);else renderKeys();}
+function submit(){
+  const inp=$("answer"),raw=inp.value.trim();
+  if(!raw||isDone())return;inp.value="";
+  const r=judge(raw);
+  if(r.type==="ok"){
+    S.cur.st[r.k]=1;S.coins+=10;const ups=progress(1);save();renderKeys();
+    const row=$("slot"+r.k);
+    launch(raw,"ok","",row.querySelector(".tiles")).then(()=>{paintSlot(r.k,true);floater("+10",row,$("coins"),bumpCoins);afterChange(ups);});
+  }else{S.cur.miss=(S.cur.miss||0)+1;save();skipTick();}
+  if(r.type==="ok"){}else if(r.type==="dup"){
+    launch(raw,"dup","Déjà trouvée");
+  }else if(r.type==="warn"){
+    launch(raw,"warn","Bonne réponse, mais pas dans les 5");
+  }else launch(raw,"bad","");
+}
+$("form").addEventListener("submit",e=>{e.preventDefault();submit();});
+$("answer").addEventListener("beforeinput",e=>{if(e.data&&/^insert/.test(e.inputType)&&!isDone()&&blocked(e.data)){e.preventDefault();buzz();}});
+document.addEventListener("keydown",e=>{
+  if(!$("modal").hidden){if(e.key==="Escape")closeModal();return;}
+  if(e.target===$("answer")||e.ctrlKey||e.metaKey||e.altKey||isDone())return;
+  if(e.key==="Enter"){e.preventDefault();submit();}
+  else if(e.key==="Backspace"){e.preventDefault();press("BS");}
+  else if(e.key.length===1&&/[\p{L}' -]/u.test(e.key)&&!(e.target.closest&&e.target.closest("button")&&e.key===" ")){e.preventDefault();if(blocked(e.key))buzz();else $("answer").value+=e.key;}
+});
+$("hintBtn").addEventListener("click",()=>{
+  if(isDone())return;
+  const free=S.coins<15;if(!free)S.coins-=15;let ups=null;const got=[];
+  S.cur.st.forEach((st,k)=>{if(st)return;const ch=[...ans(k).disp],hid=ch.map((c,i)=>i).filter(i=>!isGap(ch[i])&&!S.cur.rev[k].includes(i));
+    if(!hid.length)return;const i=hid[Math.floor(Math.random()*hid.length)];S.cur.rev[k].push(i);got.push([k,i]);
+    if(hid.length===1){S.cur.st[k]=2;const u=progress(1);ups=u||ups;}});
+  save();bumpCoins();if(!free)floater("−15",$("coins"),$("hintBtn"));
+  got.forEach(([k,i])=>paintSlot(k,true,[i]));
+  afterChange(ups);
+});
+$("skipBtn").addEventListener("click",()=>{
+  if(isDone()||S.coins<30)return;
+  S.coins-=30;S.cur.st=S.cur.st.map(s=>s||3);save();bumpCoins();
+  S.cur.st.forEach((s,k)=>{if(s===3)paintSlot(k,true);});setDoneUI();
+});
+function skipTick(){const b=$("skipBtn");if(!S.cur)return;
+  const show=!isDone()&&(Date.now()-(S.cur.t0||Date.now())>=90000||(S.cur.miss||0)>=15);
+  if(b.hidden===show)b.hidden=!show;b.disabled=S.coins<30;
+  b.title=S.coins<30?"Il te faut 30 pièces":"";}
+setInterval(skipTick,1000);
+$("nextBtn").addEventListener("click",()=>{pickQ();renderQ();
+  if(window.matchMedia&&matchMedia("(pointer:fine)").matches)$("answer").focus();});
+
+/* ---------- export / import ---------- */
+let pending=null;
+const where=(L,P,C)=>"Niveau "+L+" · phase "+P+"/"+need(L)+" · "+C+" pièces";
+function openModal(){
+  $("mCode").textContent=CODEC.encode(S.level,S.phase,S.coins);$("mWhere").textContent=where(S.level,S.phase,Math.min(S.coins,81915));
+  $("mMsg").textContent="";$("mMsg").className="msg";$("mConfirmRow").hidden=true;$("mResetRow").hidden=true;pending=null;
+  $("modal").hidden=false;$("mCopy").focus();
+}
+function closeModal(){$("modal").hidden=true;}
+$("saveBtn").addEventListener("click",openModal);
+$("mClose").addEventListener("click",closeModal);
+$("modal").addEventListener("click",e=>{if(e.target===$("modal"))closeModal();});
+$("mCopy").addEventListener("click",()=>{
+  const c=$("mCode").textContent;
+  const sel=()=>{const r=document.createRange();r.selectNodeContents($("mCode"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Code sélectionné : fais Ctrl+C");};
+  try{navigator.clipboard.writeText(c).then(()=>{$("mCopy").textContent="Copié ✓";setTimeout(()=>$("mCopy").textContent="Copier le code",1500);},sel);}catch(e){sel();}
+});
+$("mInput").addEventListener("keydown",e=>{if(e.key==="Enter")$("mLoad").click();});
+$("mLoad").addEventListener("click",()=>{
+  const v=$("mInput").value,d=CODEC.decode(v),m=$("mMsg");
+  if(!d){pending=null;$("mConfirmRow").hidden=true;m.className="msg err";
+    m.textContent=v.trim()?"Ce code ne marche pas. Vérifie les 3 blocs de lettres.":"Tape d'abord ton code.";return;}
+  pending=d;m.className="msg okc";m.textContent="Code valide : "+where(d.level,d.phase,d.coins)+".";$("mConfirmRow").hidden=false;
+});
+$("mConfirm").addEventListener("click",()=>{
+  if(!pending)return;Object.assign(S,{level:pending.level,phase:pending.phase,coins:pending.coins});pending=null;
+  pickQ();applyChapter();renderQ();closeModal();$("mInput").value="";banner(null,"Partie chargée");
+});
+$("mReset").addEventListener("click",()=>{$("mResetRow").hidden=false;});
+$("mResetYes").addEventListener("click",()=>{S=fresh();pickQ();applyChapter();renderQ();closeModal();banner(null,"C'est reparti de zéro");});
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(sizeCells,100);});
+
+/* ---------- démarrage ---------- */
+function start(data){
+  if(data&&data.S&&data.S.level)S=data.S;else load();
+  const c=S.cur;
+  if(!c||!BANK[c.id]||!Array.isArray(c.slots)||c.slots.length!==5||c.slots.some(i=>!BANK[c.id].cands[i])||!Array.isArray(c.st)||!Array.isArray(c.rev))pickQ();
+  if(!S.cur.t0){S.cur.t0=Date.now();save();}
+  buildKbd();applyChapter();renderQ();skipTick();
+}
+const hot=window.claude&&window.claude.hot;
+if(hot&&hot.snapshot)hot.snapshot(()=>({S}));
+if(hot&&hot.ready)hot.ready(start);else start(hot&&hot.data||{});
+})();
+</script>
+</body></html>
