@@ -102,6 +102,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 .key.dead,.key:disabled{opacity:.25;background:rgba(255,255,255,.06);cursor:not-allowed;box-shadow:none;transform:none}
 .key.wide{flex:2.2;max-width:180px;font:800 15px/1 var(--f-body);letter-spacing:.06em}
 .key.go{background:var(--accent);color:var(--accent-ink)}
+.key.mode{flex:1.2;max-width:110px;font:400 clamp(13px,2vw,17px)/1 var(--f-disp)}
 .kbd-legend{display:flex;gap:16px;justify-content:center;font:600 13px var(--f-cond);color:var(--dim);letter-spacing:.04em}
 .kbd-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 
@@ -650,40 +651,55 @@ function setDoneUI(){
 }
 
 /* ---------- clavier ---------- */
-const ROWS=["AZERTYUIOP","QSDFGHJKLM","WXCVBN'-"];
+const PAGES={abc:["AZERTYUIOP","QSDFGHJKLM","WXCVBN'-"],num:["1234567890","'-"]};
+let kbMode="abc";
+const symOf=ch=>ch==="’"?"'":ch;
+function mkKey(k,label,cls){const b=document.createElement("button");b.type="button";b.className="key"+(cls?" "+cls:"");b.textContent=label||k;b.dataset.k=k;return b;}
 function buildKbd(){
   const k=$("kbd");k.innerHTML="";
-  ROWS.forEach((r,ri)=>{const row=document.createElement("div");row.className="krow";
-    [...r].forEach(ch=>{const b=document.createElement("button");b.type="button";b.className="key";b.textContent=ch;b.dataset.k=ch;row.appendChild(b);});
-    if(ri===2){const b=document.createElement("button");b.type="button";b.className="key";b.textContent="⌫";b.dataset.k="BS";b.setAttribute("aria-label","Effacer");row.appendChild(b);}
+  PAGES[kbMode].forEach((r,ri,all)=>{const row=document.createElement("div");row.className="krow";
+    [...r].forEach(ch=>row.appendChild(mkKey(ch)));
+    if(ri===all.length-1){const b=mkKey("BS","⌫");b.setAttribute("aria-label","Effacer");row.appendChild(b);}
     k.appendChild(row);});
   const last=document.createElement("div");last.className="krow";
-  last.innerHTML='<button type="button" class="key wide" data-k=" ">ESPACE</button><button type="button" class="key wide go" data-k="OK">VALIDER</button>';
+  const t=mkKey("MODE",kbMode==="abc"?"123":"ABC","wide mode");t.setAttribute("aria-label",kbMode==="abc"?"Clavier des chiffres":"Clavier des lettres");
+  last.appendChild(t);last.appendChild(mkKey(" ","ESPACE","wide"));last.appendChild(mkKey("OK","VALIDER","wide go"));
   k.appendChild(last);
   const lg=document.createElement("div");lg.className="kbd-legend";
-  lg.innerHTML='<span><i style="background:color-mix(in srgb,var(--accent) 45%,#555)"></i>encore cachée</span><span><i style="background:rgba(255,255,255,.12)"></i>plus dans les mots restants</span>';
-  k.appendChild(lg);
-  k.addEventListener("click",e=>{const b=e.target.closest(".key");if(!b)return;press(b.dataset.k);});
+  lg.innerHTML='<span><i style="background:color-mix(in srgb,var(--accent) 45%,#555)"></i>utile pour les mots restants</span><span><i style="background:rgba(255,255,255,.12)"></i>ne sert plus</span>';
+  k.appendChild(lg);renderKeys();
 }
+$("kbd").addEventListener("click",e=>{const b=e.target.closest(".key");if(!b||b.disabled)return;press(b.dataset.k);});
 function press(k){
   if(isDone()||!$("modal").hidden)return;const inp=$("answer");
+  if(k==="MODE"){kbMode=kbMode==="abc"?"num":"abc";buildKbd();return;}
   if(k==="OK")return submit();
   if(k==="BS"){inp.value=inp.value.slice(0,-1);return;}
   if(blocked(k))return buzz();
-  inp.value+=k==="'"||k==="-"||k===" "?k:k.toLowerCase();
+  inp.value+=/[A-Z]/.test(k)?k.toLowerCase():k;
 }
 function liveSet(){
   const live=new Set();
-  if(S.cur&&!isDone())S.cur.st.forEach((st,k)=>{if(st)return;deacc(ans(k).disp).toUpperCase().replace(/[^A-Z]/g,"").split("").forEach(c=>live.add(c));});
+  if(S.cur&&!isDone())S.cur.st.forEach((st,k)=>{if(st)return;const d=ans(k).disp;
+    deacc(d).toUpperCase().replace(/[^A-Z0-9]/g,"").split("").forEach(c=>live.add(c));
+    [...d].forEach(c=>{c=symOf(c);if(c===" "||c==="-"||c==="'")live.add(c);});});
   return live;
 }
 function renderKeys(){
-  const live=liveSet();
-  document.querySelectorAll(".key").forEach(b=>{const c=b.dataset.k;if(c.length!==1||!/[A-Z]/.test(c))return;
-    const ok=live.has(c);b.classList.toggle("live",ok);b.classList.toggle("dead",!ok);b.disabled=!ok;});
+  const live=liveSet();let anyNum=false;
+  document.querySelectorAll(".key").forEach(b=>{const c=b.dataset.k;
+    if(c==="MODE"){return;}
+    if(!(c.length===1&&/[A-Z0-9' -]/.test(c)))return;
+    const ok=live.has(c);b.classList.toggle("live",ok&&c!==" ");b.classList.toggle("dead",!ok);b.disabled=!ok;});
+  for(const c of live)if(/[0-9]/.test(c))anyNum=true;
+  const m=document.querySelector('.key[data-k="MODE"]');if(m)m.classList.toggle("live",kbMode==="abc"&&anyNum);
 }
 function buzz(){const i=$("answer");i.classList.remove("buzz");void i.offsetWidth;i.classList.add("buzz");clearTimeout(buzz.t);buzz.t=setTimeout(()=>i.classList.remove("buzz"),340);if(navigator.vibrate)try{navigator.vibrate(40);}catch(e){}}
-function blocked(str){const live=liveSet();return deacc(str).toUpperCase().replace(/[^A-Z]/g,"").split("").some(c=>!live.has(c));}
+function blocked(str){const live=liveSet();
+  return [...str].some(ch=>{ch=symOf(ch);
+    if(ch===" "||ch==="-"||ch==="'")return !live.has(ch);
+    const b=deacc(ch).toUpperCase().replace(/[^A-Z0-9]/g,"");
+    return b.split("").some(c=>!live.has(c));});}
 /* ---------- vérification ---------- */
 function judge(raw){
   const n=norm(raw);if(!n)return{type:"bad"};
@@ -759,7 +775,7 @@ document.addEventListener("keydown",e=>{
   if(e.target===$("answer")||e.ctrlKey||e.metaKey||e.altKey||isDone())return;
   if(e.key==="Enter"){e.preventDefault();submit();}
   else if(e.key==="Backspace"){e.preventDefault();press("BS");}
-  else if(e.key.length===1&&/[\p{L}' -]/u.test(e.key)&&!(e.target.closest&&e.target.closest("button")&&e.key===" ")){e.preventDefault();if(blocked(e.key))buzz();else $("answer").value+=e.key;}
+  else if(e.key.length===1&&/[\p{L}\p{N}'’ -]/u.test(e.key)&&!(e.target.closest&&e.target.closest("button")&&e.key===" ")){e.preventDefault();if(blocked(e.key))buzz();else $("answer").value+=e.key;}
 });
 $("hintBtn").addEventListener("click",()=>{
   if(isDone())return;
