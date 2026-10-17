@@ -250,145 +250,114 @@ const CODEC=(()=>{
   return{encode,decode};
 })();
 const QB=[
-"1|Géo|Les 5 Grands Lacs d'Amérique du Nord|Supérieur/Lac Superieur;Michigan/Lac Michigan;Huron/Lac Huron;Érié/Lac Erie;Ontario/Lac Ontario",
-"1|Géo|Les 5 plus grands pays du monde par la superficie|Russie;Canada;Chine;États-Unis/USA/Etats Unis/Amerique;Brésil",
-"2|Géo|Les 5 pays les plus peuplés du monde (2025)|Inde;Chine;États-Unis/USA/Etats Unis/Amerique;Indonésie;Pakistan",
-"3|Géo|Les 5 plus longs fleuves du monde|Nil;Amazone;Yangtsé/Yangtze/Yang Tse/Chang Jiang/Fleuve bleu;Mississippi/Missouri/Mississippi-Missouri;Ienisseï/Ienissei/Yenisei",
-"1|Géo|Les 5 grands fleuves de France appris à l'école|Seine;Loire;Garonne;Rhône;Rhin",
-"1|Géo|Les 5 départements des Hauts-de-France|Nord;Pas-de-Calais;Somme;Oise;Aisne",
-"2|Géo|Les 5 départements de Normandie|Calvados;Eure;Manche;Orne;Seine-Maritime",
-"2|Géo|Les 5 départements d'outre-mer|Guadeloupe;Martinique;Guyane;Réunion/La Reunion;Mayotte",
-"2|Géo|Les 5 pays d'Asie centrale en « -stan » (ex-URSS)|Kazakhstan;Ouzbékistan;Turkménistan;Kirghizistan;Tadjikistan",
-"1|Géo|Les 5 pays nordiques|Norvège;Suède;Danemark;Finlande;Islande",
-"2|Géo|Les capitales des 5 pays nordiques|Oslo;Stockholm;Copenhague;Helsinki;Reykjavik",
-"2|Géo|Les 5 arrondissements (boroughs) de New York|Manhattan;Brooklyn;Queens;Bronx/The Bronx;Staten Island",
-"3|Géo|Les 5 plus hauts sommets du monde|Everest;K2;Kangchenjunga/Kanchenjunga;Lhotse;Makalu",
-"2|Géo|Les 5 pays du Maghreb|Maroc;Algérie;Tunisie;Libye;Mauritanie",
-"3|Géo|Les capitales des 5 pays du Maghreb|Rabat;Alger;Tunis;Tripoli;Nouakchott",
-"1|Géo|Les 5 villes de France les plus peuplées|Paris;Marseille;Lyon;Toulouse;Nice",
-"3|Géo|Les 5 pays (ou territoires) qui ont une frontière terrestre avec l'Espagne|France;Portugal;Andorre;Maroc;Royaume-Uni/Gibraltar/UK/Angleterre",
-"2|Géo|Les 5 pays frontaliers de la Suisse|France;Allemagne;Italie;Autriche;Liechtenstein",
 "1|Géo|Les 5 océans|Pacifique;Atlantique;Indien;Arctique;Austral/Antarctique",
-"2|Géo|Les 5 plus grandes îles de la Méditerranée|Sicile;Sardaigne;Chypre;Corse;Crète",
-"3|Géo|Les 5 plus grandes îles du monde|Groenland;Nouvelle-Guinée;Bornéo;Madagascar;Baffin/Terre de Baffin/Ile de Baffin",
-"1|Géo|Les 5 grandes chaînes de montagnes de France métropolitaine|Alpes;Pyrénées;Massif central;Jura;Vosges|Corse;Ardennes",
-"3|Géo|Les 5 pays les plus peuplés d'Afrique|Nigeria;Éthiopie;Égypte;RDC/Congo/Republique democratique du Congo;Tanzanie",
+"1|Géo|Les 5 continents|Afrique;Amérique;Asie;Europe;Océanie",
+"1|Géo|5 des 8 pays voisins de la France métropolitaine|Belgique;Luxembourg;Allemagne;Suisse;Italie;Monaco;Espagne;Andorre",
+"1|Géo|Les 5 grands fleuves de France appris à l'école|Seine;Loire;Garonne;Rhône;Rhin",
+"1|Géo|Les 5 villes de France les plus peuplées|Paris;Marseille;Lyon;Toulouse;Nice",
+"1|Géo|Les 5 grandes chaînes de montagnes de France|Alpes;Pyrénées;Massif central;Jura;Vosges|Corse;Ardennes",
+"2|Géo|Les 5 départements des Hauts-de-France|Nord;Pas-de-Calais;Somme;Oise;Aisne",
+"2|Géo|Les 5 départements d'outre-mer|Guadeloupe;Martinique;Guyane;Réunion/La Reunion;Mayotte",
+"2|Géo|Les 5 plus grands pays du monde|Russie;Canada;Chine;États-Unis/USA/Etats Unis/Amerique;Brésil",
+"2|Géo|Les 5 pays les plus peuplés du monde|Inde;Chine;États-Unis/USA/Etats Unis/Amerique;Indonésie;Pakistan",
+"2|Géo|Les 5 plus grands pays d'Europe (en superficie)|Russie;Ukraine;France;Espagne;Suède",
 "2|Géo|Les 5 pays les plus peuplés de l'Union européenne|Allemagne;France;Italie;Espagne;Pologne",
-"3|Géo|Les 5 États américains les plus peuplés|Californie;Texas;Floride;New York;Pennsylvanie",
-"3|Géo|Les 5 plus grands États américains par la superficie|Alaska;Texas;Californie;Montana;Nouveau-Mexique",
-"3|Géo|Les 5 pays qui bordent la mer Caspienne|Russie;Kazakhstan;Turkménistan;Iran;Azerbaïdjan",
-"2|Géo|Les 5 pays fondateurs des BRICS|Brésil;Russie;Inde;Chine;Afrique du Sud",
-"3|Géo|Les 5 plus grands pays d'Amérique du Sud|Brésil;Argentine;Pérou;Colombie;Bolivie",
-"3|Géo|Les 5 plus grands déserts du monde|Antarctique;Arctique;Sahara;Arabie/Desert d'Arabie/Arabique;Gobi",
-"1|Géo|Les 5 membres permanents du Conseil de sécurité de l'ONU|États-Unis/USA/Etats Unis;Russie;Chine;France;Royaume-Uni/UK/Angleterre/Grande-Bretagne",
-"2|Géo|5 des 6 pays fondateurs de la Communauté européenne (1957)|France;Allemagne/RFA;Italie;Belgique;Pays-Bas/Hollande;Luxembourg",
+"2|Géo|Les 5 pays nordiques|Norvège;Suède;Danemark;Finlande;Islande",
+"2|Géo|Les 5 pays du Maghreb|Maroc;Algérie;Tunisie;Libye;Mauritanie",
+"2|Géo|Les capitales de la Belgique, l'Allemagne, la Suisse, l'Italie et l'Espagne|Bruxelles;Berlin;Berne;Rome;Madrid",
+"3|Géo|Les capitales des États-Unis, du Canada, de l'Australie, du Brésil et de la Turquie (attention aux pièges)|Washington;Ottawa;Canberra;Brasilia;Ankara",
+"2|Géo|5 des 6 villes françaises qui ont un métro|Paris;Lyon;Marseille;Lille;Toulouse;Rennes",
+"2|Géo|Les 5 membres permanents du Conseil de sécurité de l'ONU|États-Unis/USA/Etats Unis;Russie;Chine;France;Royaume-Uni/UK/Angleterre/Grande-Bretagne",
+"3|Géo|Les 5 pays frontaliers de la Suisse|France;Allemagne;Italie;Autriche;Liechtenstein",
+"3|Géo|5 des 6 pays fondateurs de l'Europe (1957)|France;Allemagne/RFA;Italie;Belgique;Pays-Bas/Hollande;Luxembourg",
+"3|Géo|Les 5 pays des BRICS d'origine|Brésil;Russie;Inde;Chine;Afrique du Sud",
 "1|Histoire|Les 5 premiers présidents de la Ve République|De Gaulle/Charles de Gaulle;Pompidou;Giscard/Giscard d'Estaing/VGE;Mitterrand;Chirac",
 "1|Histoire|Les 5 derniers présidents de la République avant 2027|Macron;Hollande;Sarkozy;Chirac;Mitterrand",
-"2|Histoire|Les 5 rois Bourbons avant la Révolution|Henri IV;Louis XIII;Louis XIV;Louis XV;Louis XVI",
-"2|Histoire|Les 5 plages du Débarquement en Normandie (noms de code)|Utah;Omaha;Gold;Juno;Sword",
-"3|Histoire|Les 5 premiers empereurs romains|Auguste/Octave;Tibère;Caligula;Claude;Néron",
-"3|Histoire|Les 5 « bons empereurs » romains|Nerva;Trajan;Hadrien;Antonin/Antonin le Pieux;Marc Aurèle",
 "1|Histoire|Les 5 couleurs des anneaux olympiques|Bleu;Jaune;Noir;Vert;Rouge",
-"1|Histoire|Les 5 continents représentés par les anneaux olympiques|Afrique;Amérique;Asie;Europe;Océanie",
+"1|Histoire|Les présidents des États-Unis de 1993 à 2025|Clinton;Bush/George Bush/George W Bush;Obama;Trump;Biden",
+"2|Histoire|Les 5 plages du Débarquement en Normandie|Utah;Omaha;Gold;Juno;Sword",
 "2|Histoire|Les 5 dernières villes des JO d'été (jusqu'à 2024)|Paris;Tokyo;Rio/Rio de Janeiro;Londres;Pékin/Beijing",
-"3|Histoire|Les 5 premiers hommes à avoir marché sur la Lune|Armstrong/Neil Armstrong;Aldrin/Buzz Aldrin;Conrad/Pete Conrad;Bean/Alan Bean;Shepard/Alan Shepard",
-"2|Histoire|Les 5 premiers pays à avoir eu la bombe atomique|États-Unis/USA/Etats Unis;URSS/Russie/Union sovietique;Royaume-Uni/UK/Angleterre;France;Chine",
-"2|Histoire|Les 5 frères et sœurs de Zeus|Poséidon;Hadès;Héra;Déméter;Hestia",
-"3|Histoire|Les 5 fleuves des Enfers dans la mythologie grecque|Styx;Achéron;Léthé;Cocyte;Phlégéthon/Pyriphlegeton",
-"3|Histoire|Les 5 grandes dynasties de rois de France|Mérovingiens;Carolingiens;Capétiens;Valois;Bourbons|Orléans;Bonaparte",
-"3|Histoire|Les 5 premiers présidents des États-Unis|Washington;Adams/John Adams;Jefferson;Madison;Monroe",
-"1|Histoire|Les 5 présidents des États-Unis de 1993 à 2025|Clinton;Bush/George Bush/George W Bush;Obama;Trump;Biden",
+"2|Histoire|Les pays champions du monde de foot de 2006 à 2022|Italie;Espagne;Allemagne;France;Argentine",
+"3|Histoire|Les 5 rois de France entre Henri IV et la Révolution (Henri IV compris)|Henri IV;Louis XIII;Louis XIV;Louis XV;Louis XVI",
+"3|Histoire|Les 5 premiers pays à avoir eu la bombe atomique|États-Unis/USA/Etats Unis;URSS/Russie/Union sovietique;Royaume-Uni/UK/Angleterre;France;Chine",
+"3|Histoire|Les 5 frères et sœurs de Zeus|Poséidon;Hadès;Héra;Déméter;Hestia",
 "3|Histoire|5 des 7 Merveilles du monde antique|Pyramide/Pyramide de Kheops/Kheops/Pyramides;Jardins/Jardins de Babylone/Babylone;Zeus/Statue de Zeus;Artémis/Temple d'Artemis;Mausolée/Mausolee d'Halicarnasse/Halicarnasse;Colosse/Colosse de Rhodes;Phare/Phare d'Alexandrie",
-"3|Histoire|5 des 7 femmes qui reposent au Panthéon|Curie/Marie Curie;Veil/Simone Veil;Baker/Josephine Baker;Tillion/Germaine Tillion;Manouchian/Melinee Manouchian;Berthelot/Sophie Berthelot;Anthonioz/Genevieve de Gaulle/Genevieve de Gaulle-Anthonioz",
-"2|Histoire|Les 5 pays vainqueurs des 5 dernières Coupes du monde de foot (2006-2022)|Italie;Espagne;Allemagne;France;Argentine",
 ];
 QB.push(
-"1|Sciences|Les 5 planètes visibles à l'œil nu|Mercure;Vénus;Mars;Jupiter;Saturne",
-"1|Sciences|Les 5 planètes les plus proches du Soleil|Mercure;Vénus;Terre;Mars;Jupiter",
-"2|Sciences|Les 5 plus grosses planètes du système solaire|Jupiter;Saturne;Uranus;Neptune;Terre",
-"3|Sciences|Les 5 planètes naines reconnues officiellement|Cérès;Pluton;Éris;Hauméa/Haumea;Makémaké/Makemake",
-"3|Sciences|Les 5 plus grandes lunes du système solaire|Ganymède;Titan;Callisto;Io;Lune",
 "1|Sciences|Les 5 sens|Vue/Vision;Ouïe/Audition;Odorat;Goût;Toucher",
-"2|Sciences|Les 5 saveurs de base|Sucré;Salé;Acide;Amer;Umami",
-"2|Sciences|Les 5 premiers éléments du tableau périodique|Hydrogène;Hélium;Lithium;Béryllium;Bore",
-"3|Sciences|Les 5 premiers gaz nobles du tableau périodique|Hélium;Néon;Argon;Krypton;Xénon",
-"1|Sciences|Les 5 grandes classes de vertébrés|Mammifères;Oiseaux;Poissons;Reptiles;Amphibiens/Batraciens",
-"3|Sciences|Les 5 règnes du vivant (classification de Whittaker)|Animaux/Animal;Végétaux/Plantes/Vegetal;Champignons;Protistes;Monères/Bacteries/Procaryotes",
-"2|Sciences|Les 5 couches de l'atmosphère terrestre|Troposphère;Stratosphère;Mésosphère;Thermosphère;Exosphère",
 "1|Sciences|Les 5 doigts de la main|Pouce;Index;Majeur;Annulaire;Auriculaire/Petit doigt",
-"2|Sciences|Les 5 premiers nombres premiers (en lettres)|Deux/2;Trois/3;Cinq/5;Sept/7;Onze/11",
-"3|Sciences|Les 5 solides de Platon (polyèdres réguliers)|Tétraèdre;Cube/Hexaedre;Octaèdre;Dodécaèdre;Icosaèdre",
-"3|Sciences|Les 5 grands félins du genre Panthera|Lion;Tigre;Léopard/Panthere;Jaguar;Once/Panthere des neiges/Leopard des neiges/Irbis",
-"2|Sciences|Les 5 animaux du « Big Five » africain|Lion;Léopard/Panthere;Éléphant;Rhinocéros;Buffle",
-"3|Sciences|5 des 7 unités de base du système international|Mètre;Kilogramme/Kilo;Seconde;Ampère;Kelvin;Mole;Candela",
+"1|Sciences|Les 5 planètes les plus proches du Soleil|Mercure;Vénus;Terre;Mars;Jupiter",
+"1|Sciences|5 des 8 planètes du système solaire|Mercure;Vénus;Terre;Mars;Jupiter;Saturne;Uranus;Neptune",
 "1|Sciences|5 des 7 couleurs de l'arc-en-ciel|Rouge;Orange;Jaune;Vert;Bleu;Indigo;Violet",
+"1|Sciences|Les 5 grandes familles de vertébrés|Mammifères;Oiseaux;Poissons;Reptiles;Amphibiens/Batraciens",
+"2|Sciences|Les 5 plus grosses planètes du système solaire|Jupiter;Saturne;Uranus;Neptune;Terre",
+"2|Sciences|Les 5 animaux du « Big Five » africain|Lion;Léopard/Panthere;Éléphant;Rhinocéros;Buffle",
+"3|Sciences|Les 5 premiers nombres premiers (écrits en lettres)|Deux/2;Trois/3;Cinq/5;Sept/7;Onze/11",
+"3|Sciences|Les 5 saveurs de base que la langue reconnaît|Sucré;Salé;Acide;Amer;Umami",
 "1|Culture|Les 5 membres de la famille Simpson|Homer;Marge;Bart;Lisa;Maggie",
-"2|Culture|Les 5 émotions du premier film Vice-Versa|Joie;Tristesse;Colère;Peur;Dégoût",
-"2|Culture|Les 5 membres des Spice Girls (surnoms)|Scary;Sporty;Baby;Ginger;Posh",
-"2|Culture|Les 5 membres de One Direction|Harry/Harry Styles/Styles;Niall/Niall Horan/Horan;Liam/Liam Payne/Payne;Louis/Louis Tomlinson/Tomlinson;Zayn/Zayn Malik/Malik",
-"3|Culture|Les 5 frères des Jackson Five|Jackie;Tito;Jermaine;Marlon;Michael",
+"1|Culture|Les 5 émotions du premier film Vice-Versa|Joie;Tristesse;Colère;Peur;Dégoût",
 "1|Culture|Les 5 membres de la bande de Scooby-Doo|Scooby/Scooby-Doo;Sammy/Shaggy;Fred;Daphné;Véra/Velma",
-"3|Culture|Les 5 membres du Club des Cinq|Claude;François;Mick;Annie;Dagobert",
-"2|Culture|Les 5 frères de la série Malcolm|Francis;Reese;Malcolm;Dewey;Jamie",
 "1|Culture|Les 5 membres de la famille des Indestructibles|Bob/Mr Indestructible/Monsieur Indestructible;Hélène/Elastigirl;Violette;Flèche/Dash;Jack-Jack/Jack Jack",
 "1|Culture|5 des 7 nains de Blanche-Neige (Disney)|Prof;Grincheux;Joyeux;Dormeur;Timide;Atchoum;Simplet",
-"2|Culture|5 des 6 amis de la série Friends|Rachel;Monica;Phoebe;Joey;Chandler;Ross",
-"2|Culture|Les 5 non-hobbits de la Communauté de l'anneau|Gandalf;Aragorn/Grand-Pas;Legolas;Gimli;Boromir",
-"2|Culture|Les 5 premiers tomes de Harry Potter (mot-clé du titre)|Sorciers/Ecole des sorciers/Harry Potter a l'ecole des sorciers;Secrets/Chambre des secrets/La chambre des secrets;Azkaban/Prisonnier d'Azkaban/Le prisonnier d'Azkaban;Coupe de feu/La coupe de feu;Phénix/Ordre du phenix/L'ordre du phenix",
-"3|Culture|Les 5 premiers acteurs à avoir joué James Bond au cinéma|Connery/Sean Connery;Lazenby/George Lazenby;Moore/Roger Moore;Dalton/Timothy Dalton;Brosnan/Pierce Brosnan",
-"3|Culture|Les 5 instruments du quintette à vent classique|Flûte;Hautbois;Clarinette;Basson;Cor",
 "1|Culture|Les 4 Tortues Ninja et leur maître|Léonardo/Leonard/Leo;Michelangelo/Mickael/Mike;Donatello/Donnie;Raphaël/Raph;Splinter/Maitre Splinter",
+"1|Culture|Les 4 maisons de Poudlard et le nom de l'école|Gryffondor;Serpentard;Poufsouffle;Serdaigle;Poudlard",
+"1|Culture|Cite 5 personnages du Roi Lion (1994)|Simba;Nala;Mufasa;Scar;Timon;Pumbaa;Rafiki;Zazu;Sarabi;Shenzi;Banzai;Ed",
+"2|Culture|5 des 6 amis de la série Friends|Rachel;Monica;Phoebe;Joey;Chandler;Ross",
+"2|Culture|Les 5 frères de la série Malcolm|Francis;Reese;Malcolm;Dewey;Jamie",
+"2|Culture|Les 5 membres de One Direction|Harry/Harry Styles/Styles;Niall/Niall Horan/Horan;Liam/Liam Payne/Payne;Louis/Louis Tomlinson/Tomlinson;Zayn/Zayn Malik/Malik",
 "2|Culture|Les 5 couleurs des Power Rangers d'origine|Rouge;Bleu;Jaune;Rose;Noir",
-"3|Culture|Les 5 sauces mères de la cuisine française|Béchamel;Velouté;Espagnole;Tomate;Hollandaise",
-"3|Culture|Les 5 fromages AOP d'Auvergne|Cantal;Salers;Saint-Nectaire;Bleu/Bleu d'Auvergne;Fourme/Fourme d'Ambert",
+"2|Culture|Les 5 premiers tomes de Harry Potter (mot-clé du titre)|Sorciers/Ecole des sorciers/Harry Potter a l'ecole des sorciers;Secrets/Chambre des secrets/La chambre des secrets;Azkaban/Prisonnier d'Azkaban/Le prisonnier d'Azkaban;Coupe de feu/La coupe de feu;Phénix/Ordre du phenix/L'ordre du phenix",
+"2|Culture|Les 5 non-hobbits de la Communauté de l'anneau|Gandalf;Aragorn/Grand-Pas;Legolas;Gimli;Boromir",
+"2|Culture|5 des 7 péchés capitaux|Orgueil;Avarice;Envie;Colère;Luxure;Gourmandise;Paresse",
+"2|Culture|Les 5 enfants de Stranger Things (saison 1)|Mike;Dustin;Lucas;Will;Onze/Eleven/El",
 "1|Langue|Les 5 jours de travail de la semaine|Lundi;Mardi;Mercredi;Jeudi;Vendredi",
 "1|Langue|Les 5 premiers mois de l'année|Janvier;Février;Mars;Avril;Mai",
+"1|Langue|Les 5 derniers mois de l'année|Août;Septembre;Octobre;Novembre;Décembre",
 "1|Langue|5 des 6 voyelles de l'alphabet|A;E;I;O;U;Y",
-"1|Langue|5 des 7 conjonctions de coordination (« mais ou et donc or ni car »)|Mais;Ou;Et;Donc;Or;Ni;Car",
-"2|Langue|Les 5 premières lettres de l'alphabet grec|Alpha;Bêta;Gamma;Delta;Epsilon",
-"3|Langue|Les 5 dernières lettres de l'alphabet grec|Upsilon;Phi;Chi/Khi;Psi;Oméga",
+"1|Langue|5 des 7 conjonctions « mais ou et donc or ni car »|Mais;Ou;Et;Donc;Or;Ni;Car",
 "1|Langue|Les nombres de 1 à 5 en anglais|One;Two;Three;Four;Five",
 "1|Langue|Les nombres de 1 à 5 en espagnol|Uno;Dos;Tres;Cuatro;Cinco",
-"3|Langue|Les nombres de 1 à 5 en japonais|Ichi;Ni;San;Shi/Yon;Go",
 "2|Langue|Du lundi au vendredi en anglais|Monday;Tuesday;Wednesday;Thursday;Friday",
+"2|Langue|Les nombres de 1 à 5 en allemand|Eins;Zwei;Drei;Vier;Fünf/Funf/Fuenf",
+"2|Langue|Les 5 premières lettres de l'alphabet grec|Alpha;Bêta;Gamma;Delta;Epsilon",
+"3|Langue|5 des 7 mois qui ont 31 jours|Janvier;Mars;Mai;Juillet;Août;Octobre;Décembre",
 "1|Divers|Les 5 dernières lettres de l'alphabet|V;W;X;Y;Z",
 "1|Divers|Les 5 pièces des échecs autres que le pion|Roi;Dame/Reine;Tour;Fou;Cavalier",
+"1|Divers|5 des 7 notes de la gamme|Do/Ut;Ré;Mi;Fa;Sol;La;Si",
+"1|Divers|Les 4 couleurs d'un jeu de cartes et la carte en plus|Cœur;Carreau;Trèfle;Pique;Joker",
 "1|Divers|Les 5 premiers signes du zodiaque|Bélier;Taureau;Gémeaux;Cancer;Lion",
 "2|Divers|Les 5 derniers signes du zodiaque|Scorpion;Sagittaire;Capricorne;Verseau;Poissons",
-"3|Divers|Les 5 premiers animaux du zodiaque chinois|Rat;Bœuf/Buffle;Tigre;Lapin/Lievre;Dragon",
-"2|Divers|Les 5 éléments de l'astrologie chinoise|Bois;Feu;Terre;Métal;Eau",
-"1|Divers|5 des 7 notes de la gamme|Do/Ut;Ré;Mi;Fa;Sol;La;Si",
 "2|Divers|5 des 6 couleurs de ceinture de judo avant la noire|Blanche;Jaune;Orange;Verte;Bleue;Marron",
+"3|Divers|Les 5 lettres qui servent à écrire les chiffres romains de 1 à 100|I;V;X;L;C",
 );
 QB.push(
+"1|Actu France|5 des 6 premières chaînes de la TNT (numéros 1 à 6)|TF1/TF 1;France 2;France 3;Canal+/Canal plus/Canal;France 5;M6",
+"1|Actu France|Les 5 géants du web qu'on appelle les GAFAM|Google;Apple;Facebook/Meta;Amazon;Microsoft",
+"1|Actu France|Les 5 consoles PlayStation de salon|PS1/PS 1/Playstation 1;PS2/PS 2/Playstation 2;PS3/PS 3/Playstation 3;PS4/PS 4/Playstation 4;PS5/PS 5/Playstation 5",
+"2|Actu France|Les 5 applis du groupe Meta|Facebook;Instagram/Insta;WhatsApp;Messenger;Threads",
 "2|Actu France|5 des 7 Premiers ministres d'Emmanuel Macron|Philippe/Edouard Philippe;Castex/Jean Castex;Borne/Elisabeth Borne;Attal/Gabriel Attal;Barnier/Michel Barnier;Bayrou/Francois Bayrou;Lecornu/Sebastien Lecornu",
 "2|Actu France|Les 5 premiers pays au tableau des médailles des JO de Paris 2024|États-Unis/USA/Etats Unis;Chine;Japon;Australie;France",
 "2|Actu France|Cite 5 Français champions olympiques en individuel à Paris 2024|Marchand/Leon Marchand;Riner/Teddy Riner;Beaugrand/Cassandre Beaugrand;Vaast/Kauli Vaast;Gestin/Nicolas Gestin;Daudet/Joris Daudet;Apithy-Brunet/Apithy/Manon Apithy-Brunet;Ferrand-Prévot/Pauline Ferrand-Prevot;Thomas/Benjamin Thomas",
-"3|Actu France|Les villes des 5 prochains Jeux olympiques (2026 à 2034)|Milan/Milan-Cortina/Cortina;Los Angeles/LA;Alpes/Alpes francaises;Brisbane;Salt Lake City/Salt Lake",
-"3|Actu France|Les 5 dernières villes des JO d'hiver (2010 à 2026)|Vancouver;Sotchi;Pyeongchang;Pékin/Beijing;Milan/Milan-Cortina/Cortina",
-"3|Actu France|Les 5 représentants de la France à l'Eurovision de 2021 à 2025|Barbara Pravi/Pravi;Alvan et Ahez/Alvan/Ahez;La Zarra/Zarra;Slimane;Louane",
 "2|Actu France|5 des 6 Français Ballon d'or|Kopa;Platini;Papin;Zidane;Benzema;Dembélé",
-"3|Actu France|Les 5 derniers lauréats différents du Ballon d'or (2018 à 2025)|Dembélé;Rodri;Messi;Benzema;Modric",
-"1|Actu France|5 des 6 premières chaînes de la TNT (numéros 1 à 6)|TF1/TF 1;France 2;France 3;Canal+/Canal plus/Canal;France 5;M6",
-"2|Sport|5 des 6 nations du Tournoi des Six Nations|France;Angleterre;Écosse;Irlande;Galles/Pays de Galles;Italie",
+"3|Actu France|Les villes des 5 prochains Jeux olympiques (2026 à 2034)|Milan/Milan-Cortina/Cortina;Los Angeles/LA;Alpes/Alpes francaises;Brisbane;Salt Lake City/Salt Lake",
+"3|Actu France|Les 5 derniers gagnants différents du Ballon d'or (2018 à 2025)|Dembélé;Rodri;Messi;Benzema;Modric",
+"1|Sport|Les pays des 5 grands championnats de foot européens|Angleterre;Espagne;Italie;Allemagne;France",
+"2|Sport|Les noms des 5 grands championnats de foot européens|Premier League/PL;Liga/La Liga;Serie A;Bundesliga;Ligue 1/Ligue1",
+"1|Sport|5 des 6 nations du Tournoi des Six Nations|France;Angleterre;Écosse;Irlande;Galles/Pays de Galles;Italie",
+"2|Sport|Les 5 clubs de Cristiano Ronaldo|Sporting/Sporting Lisbonne;Manchester/Manchester United/Man United/MU;Real Madrid/Real;Juventus/Juve;Al-Nassr/Al Nassr/Nassr",
+"2|Sport|5 des 6 pays qui ont gagné la Coupe du monde de foot plusieurs fois|Brésil;Allemagne;Italie;Argentine;France;Uruguay",
+"2|Sport|Les pays organisateurs de la Coupe du monde de foot de 2006 à 2022|Allemagne;Afrique du Sud;Brésil;Russie;Qatar",
 "2|Sport|Les 5 postes au basket|Meneur;Arrière;Ailier;Ailier fort;Pivot",
-"1|Sport|5 des 6 pays qui ont gagné la Coupe du monde de foot plusieurs fois|Brésil;Allemagne;Italie;Argentine;France;Uruguay",
-"2|Sport|Les 5 derniers pays organisateurs de la Coupe du monde de foot (2006 à 2022)|Allemagne;Afrique du Sud;Brésil;Russie;Qatar",
-"3|Sport|Les 5 derniers Français vainqueurs du Tour de France|Hinault;Fignon;Thévenet;Pingeon;Aimar",
 "3|Sport|Les 5 clubs les plus titrés en championnat de France de foot|PSG/Paris/Paris Saint-Germain;Saint-Étienne/ASSE;Marseille/OM;Nantes;Monaco",
-"1|Pop|Les 5 évolutions d'Évoli des deux premières générations|Aquali;Voltali;Pyroli;Mentali;Noctali",
-"2|Pop|Les 5 premiers Pokémon du Pokédex (n°1 à 5)|Bulbizarre;Herbizarre;Florizarre;Salamèche;Reptincel",
-"3|Pop|Les 5 premières régions Pokémon|Kanto;Johto;Hoenn;Sinnoh;Unys",
 "1|Pop|5 des 6 matériaux d'outils dans Minecraft|Bois;Pierre;Fer;Or;Diamant;Netherite",
-"3|Pop|Les 5 chevaliers de bronze principaux de Saint Seiya|Seiya;Shiryu;Hyoga;Shun;Ikki",
-"2|Pop|Les 5 premiers membres de l'équipage de Luffy (dans l'ordre d'arrivée)|Zoro;Nami;Usopp;Sanji;Chopper",
-"2|Pop|Les 5 Kage des grands pays ninjas de Naruto|Hokage;Kazekage;Mizukage;Raikage;Tsuchikage",
-"2|Pop|5 des 6 Pierres d'infinité (Marvel)|Espace;Esprit;Réalité;Pouvoir;Temps;Âme",
 "1|Pop|5 des 6 Avengers du premier film (2012)|Iron Man/Ironman;Captain/Captain America;Thor;Hulk;Black Widow/Veuve noire;Hawkeye/Oeil de faucon",
-"2|Pop|5 des 7 membres de BTS|RM;Jin;Suga;J-Hope/Jhope;Jimin;V;Jungkook",
+"2|Pop|Les 5 évolutions d'Évoli des deux premières générations|Aquali;Voltali;Pyroli;Mentali;Noctali",
+"2|Pop|Les 5 premiers Pokémon du Pokédex (n°1 à 5)|Bulbizarre;Herbizarre;Florizarre;Salamèche;Reptincel",
+"2|Pop|Les 5 premiers membres de l'équipage de Luffy (dans l'ordre d'arrivée)|Zoro;Nami;Usopp;Sanji;Chopper",
+"2|Pop|5 des 6 Pierres d'infinité (Marvel)|Espace;Esprit;Réalité;Pouvoir;Temps;Âme",
 "2|Pop|5 des 6 consoles de salon Nintendo sorties avant la Switch|NES;Super Nintendo/SNES;N64/Nintendo 64;GameCube/Game Cube;Wii;Wii U",
-"2|Pop|Pac-Man et les 4 fantômes|Pac-Man/Pacman;Blinky;Pinky;Inky;Clyde",
-"2|Pop|5 des 7 péchés capitaux|Orgueil;Avarice;Envie;Colère;Luxure;Gourmandise;Paresse",
+"3|Pop|Les 5 premières régions Pokémon|Kanto;Johto;Hoenn;Sinnoh;Unys",
+"3|Pop|5 des 7 membres de BTS|RM;Jin;Suga;J-Hope/Jhope;Jimin;V;Jungkook",
 );
 /* ---------- fonds : paysages dessinés en canvas, une scène par chapitre ---------- */
 const Scene=(()=>{
@@ -557,7 +526,7 @@ return{
 })();
 (()=>{
 const $=id=>document.getElementById(id);
-const KEY="quintette.v2",BANKV=3;
+const KEY="quintette.v2",BANKV=4;
 const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ROMAN=["","","II","III","IV","V","VI","VII","VIII","IX","X"];
 function chapter(L){const i=Math.floor((L-1)/10),s=Scene.info(i),r=Math.floor(i/10)+1;return{idx:i,accent:s.accent,label:s.name+(r>1?" "+(ROMAN[r]||r):"")};}
@@ -573,7 +542,7 @@ const weights=L=>L<=5?[.6,.3,.1]:L<=20?[.4,.4,.2]:L<=60?[.3,.4,.3]:[.25,.35,.4];
 const isGap=ch=>/[\s'’\-.]/.test(ch);
 
 /* ---------- état ---------- */
-const fresh=()=>({level:1,phase:0,coins:50,seen:[],last:"",cur:null,bankV:3});
+const fresh=()=>({level:1,phase:0,coins:50,seen:[],last:"",cur:null,bankV:4});
 let S=fresh();
 function load(){try{const r=JSON.parse(localStorage.getItem(KEY)||"null");if(r&&r.level>0){S=Object.assign(fresh(),r);if(S.bankV!==BANKV){S.seen=[];S.cur=null;S.bankV=BANKV;}}}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -606,8 +575,7 @@ function renderHud(){
   $("lvlNum").textContent="NIV. "+S.level;
   const n=need(S.level);$("barFill").style.width=(S.phase/n*100)+"%";
   $("lvlSub").textContent="Phase "+S.phase+" / "+n+" · ensuite niveau "+(S.level+1);
-  $("hintBtn").disabled=isDone();
-  const cost=$("hintBtn").querySelector(".cost");if(cost)cost.textContent=S.coins<15?"gratuit":"15";
+  $("hintBtn").disabled=isDone()||S.coins<15;$("hintBtn").title=S.coins<15?"Il te faut 15 pièces":"";
 }
 function sizeCells(){
   const box=$("slots"),n=+box.dataset.n||12,w=box.clientWidth-32,gap=innerWidth<=560?3:Math.min(7,Math.max(3,innerWidth*.008));
@@ -779,8 +747,8 @@ document.addEventListener("keydown",e=>{
   else if(e.key.length===1&&/[\p{L}\p{N}'’ -]/u.test(e.key)&&!(e.target.closest&&e.target.closest("button")&&e.key===" ")){e.preventDefault();if(blocked(e.key))buzz();else $("answer").value+=e.key;}
 });
 $("hintBtn").addEventListener("click",()=>{
-  if(isDone())return;
-  const free=S.coins<15;if(!free)S.coins-=15;let ups=null;const got=[];
+  if(isDone()||S.coins<15)return;
+  const free=false;S.coins-=15;let ups=null;const got=[];
   const base=c=>deacc(c).toUpperCase().replace(/[^A-Z0-9]/g,"")[0]||"";
   /* lettres encore cachées de chaque mot restant */
   const hidden={};S.cur.st.forEach((st,k)=>{if(st)return;const ch=[...ans(k).disp];
