@@ -2,6 +2,7 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style></head><body>
 <title>Quintette</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='2' width='60' height='60' rx='14' fill='%23ffd23f'/%3E%3Crect x='8' y='8' width='48' height='48' rx='10' fill='%2317120a'/%3E%3Cpath d='M41 17H25l-2 15c3-2 6-3 9-3 6 0 10 4 10 9s-4 10-11 10c-4 0-7-1-9-3' fill='none' stroke='%23ffd23f' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap">
@@ -780,11 +781,21 @@ document.addEventListener("keydown",e=>{
 $("hintBtn").addEventListener("click",()=>{
   if(isDone())return;
   const free=S.coins<15;if(!free)S.coins-=15;let ups=null;const got=[];
-  S.cur.st.forEach((st,k)=>{if(st)return;const ch=[...ans(k).disp],hid=ch.map((c,i)=>i).filter(i=>!isGap(ch[i])&&!S.cur.rev[k].includes(i));
-    if(!hid.length)return;const i=hid[Math.floor(Math.random()*hid.length)];S.cur.rev[k].push(i);got.push([k,i]);
-    if(hid.length===1){S.cur.st[k]=2;const u=progress(1);ups=u||ups;}});
+  const base=c=>deacc(c).toUpperCase().replace(/[^A-Z0-9]/g,"")[0]||"";
+  /* lettres encore cachées de chaque mot restant */
+  const hidden={};S.cur.st.forEach((st,k)=>{if(st)return;const ch=[...ans(k).disp];
+    hidden[k]=ch.map((c,i)=>i).filter(i=>!isGap(ch[i])&&base(ch[i])&&!S.cur.rev[k].includes(i)).map(i=>({i,l:base(ch[i])}));});
+  /* la lettre présente dans le plus de mots gagne */
+  const score={};Object.values(hidden).forEach(h=>new Set(h.map(x=>x.l)).forEach(l=>score[l]=(score[l]||0)+1));
+  const best=Math.max(0,...Object.values(score)),pool=Object.keys(score).filter(l=>score[l]===best),L=pool[Math.floor(Math.random()*pool.length)];
+  Object.entries(hidden).forEach(([k,h])=>{k=+k;if(!h.length)return;
+    let pick=h.filter(x=>x.l===L).map(x=>x.i);
+    if(!pick.length)pick=[h[Math.floor(Math.random()*h.length)].i];
+    pick.forEach(i=>S.cur.rev[k].push(i));got.push([k,pick]);
+    if(pick.length===h.length){S.cur.st[k]=2;const u=progress(1);ups=u||ups;}});
   save();bumpCoins();if(!free)floater("−15",$("coins"),$("hintBtn"));
-  got.forEach(([k,i])=>paintSlot(k,true,[i]));
+  got.forEach(([k,p])=>paintSlot(k,true,p));
+  if(L&&best>1)toast("Indice : toutes les « "+L+" »");
   afterChange(ups);
 });
 $("skipBtn").addEventListener("click",()=>{
