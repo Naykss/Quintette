@@ -2300,7 +2300,7 @@ const parseList=s=>s?s.split(";").map(a=>{const al=a.split("/").map(x=>x.trim())
 const BANK=QB.map((line,id)=>{const p=line.split("|");return{id,d:+p[0],cat:p[1],q:p[2].split("~").map(x=>x.trim()),key:p[2].split("~")[0].trim(),cands:parseList(p[3]),extra:parseList(p[4]||"")};});
 const LAU=BANK.find(b=>b.cat==="Spécial");
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-const weights=L=>L<=5?[.6,.3,.1]:L<=20?[.4,.4,.2]:L<=60?[.3,.4,.3]:[.25,.35,.4];
+const weights=L=>L<=10?[.75,.25,0]:L<=30?[.6,.32,.08]:L<=60?[.5,.38,.12]:[.45,.4,.15];
 const isGap=ch=>/[\s'’\-.]/.test(ch);
 
 /* ---------- état ---------- */
@@ -2326,12 +2326,19 @@ function pickQ(){
     b=sub[Math.floor(Math.random()*sub.length)];
     S.seen.push(b.key);
   }
+  /* les réponses sont rangées de la plus évidente à la moins évidente :
+     une question facile pioche dans les 6 premières, une moyenne dans les 8 premières */
   const idx=b.cands.map((_,i)=>i),was=new Set(S.shown[b.key]||[]);
-  const slots=shuffle(idx.filter(i=>!was.has(i))).concat(shuffle(idx.filter(i=>was.has(i)))).slice(0,5).sort((x,y)=>x-y);
+  const K=Math.max(5,Math.min(idx.length,b.d===1?6:b.d===2?8:idx.length)),top=idx.slice(0,K),rest=idx.slice(K);
+  const fresh_=a=>a.filter(i=>!was.has(i)),old_=a=>a.filter(i=>was.has(i));
+  const order=was.size?[...shuffle(fresh_(top)),...shuffle(fresh_(rest)),...shuffle(old_(top)),...shuffle(old_(rest))]:[...shuffle(top),...shuffle(rest)];
+  const slots=order.slice(0,5).sort((x,y)=>x-y);
   S.shown[b.key]=[...new Set([...(S.shown[b.key]||[]),...slots])];
   if(S.shown[b.key].length>=b.cands.length)S.shown[b.key]=slots.slice();
   S.last=b.cat;
   S.cur={id:b.id,key:b.key,slots,st:[0,0,0,0,0],rev:[[],[],[],[],[]],t0:Date.now(),qi:b===LAU?0:((S.round||1)-1)%b.q.length};
+  /* question facile : la 1re lettre de chaque réponse est offerte */
+  if(b.d===1)slots.forEach((ci,k)=>{const ch=[...b.cands[ci].disp];const L=ch.filter(c=>!isGap(c)&&/[a-z0-9]/i.test(deacc(c))).length,i=ch.findIndex(c=>!isGap(c)&&/[a-z0-9]/i.test(deacc(c)));if(L>=3&&i>=0)S.cur.rev[k].push(i);});
   save();
 }
 function progress(n){
@@ -2519,6 +2526,9 @@ function submit(){
 }
 $("form").addEventListener("submit",e=>{e.preventDefault();submit();});
 $("answer").addEventListener("input",renderKeys);
+/* un bouton cliqué ne garde jamais le focus : sinon Espace ou Entrée le re-déclenchent (ex. l'indice) */
+document.addEventListener("mousedown",e=>{const b=e.target.closest&&e.target.closest("button");if(b&&!b.closest("#modal"))e.preventDefault();});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button");if(b&&!b.closest("#modal"))b.blur();});
 $("answer").addEventListener("beforeinput",e=>{if(e.data&&/^insert/.test(e.inputType)&&!isDone()&&blocked(e.data)){e.preventDefault();buzz();}});
 document.addEventListener("keydown",e=>{
   if(!$("modal").hidden){if(e.key==="Escape")closeModal();return;}
@@ -2527,7 +2537,7 @@ document.addEventListener("keydown",e=>{
   if((e.target===$("answer")&&!$("answer").readOnly)||e.ctrlKey||e.metaKey||e.altKey||isDone())return;
   if(e.key==="Enter"){e.preventDefault();submit();}
   else if(e.key==="Backspace"){e.preventDefault();press("BS");}
-  else if(e.key.length===1&&/[\p{L}\p{N}'’ -]/u.test(e.key)&&!(e.target.closest&&e.target.closest("button")&&e.key===" ")){e.preventDefault();if(blocked(e.key))buzz();else{$("answer").value+=e.key;renderKeys();}}
+  else if(e.key.length===1&&/[\p{L}\p{N}'’ -]/u.test(e.key)){e.preventDefault();if(blocked(e.key))buzz();else{$("answer").value+=e.key;renderKeys();}}
 });
 $("hintBtn").addEventListener("click",()=>{
   if(isDone()||S.coins<15)return;
